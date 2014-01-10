@@ -1,0 +1,312 @@
+This file contains a more complete transcript of many of the command examples in
+the Package Management tutorial which is part of the "Dr. Brown's Administeria"
+feature in Linux Format 164. The examples are in more or less the same order as
+they are mentioned in the tutorial.
+
+======== rpm -qp: just get the package version ========
+
+$ cd /media/CentOS_6.2_Final/Packages
+$ rpm -qp aide-0.14-3.el6.i686.rpm 
+aide-0.14-3.el6.i686
+
+======== rpm -qip: get the package description ========
+
+$ cd /media/CentOS_6.2_Final/Packages
+$ rpm -qip aide-0.14-3.el6.i686.rpm 
+Name        : aide                   Relocations: (not relocatable)
+Version     : 0.14                        Vendor: CentOS
+Release     : 3.el6                   Build Date: Thu 11 Nov 2010 00:19:52 GMT
+Install Date: (not installed)         Build Host: c6b4.bsys.dev.centos.org
+Group       : Applications/System     Source RPM: aide-0.14-3.el6.src.rpm
+Size        : 302382                     License: GPLv2+
+Signature   : RSA/8, Sun 03 Jul 2011 04:59:33 BST, Key ID 0946fca2c105b9de
+Packager    : CentOS BuildSystem <http://bugs.centos.org>
+URL         : http://sourceforge.net/projects/aide
+Summary     : Intrusion detection environment
+Description :
+AIDE (Advanced Intrusion Detection Environment) is a file integrity
+checker and intrusion detection program.
+
+======== rpm -qlp: list the files in the package ========
+
+$ rpm -qlp aide-0.14-3.el6.i686.rpm 
+/etc/aide.conf
+/etc/logrotate.d/aide
+/usr/sbin/aide
+/usr/share/doc/aide-0.14
+/usr/share/doc/aide-0.14/AUTHORS
+/usr/share/doc/aide-0.14/COPYING
+/usr/share/doc/aide-0.14/ChangeLog
+/usr/share/doc/aide-0.14/NEWS
+/usr/share/doc/aide-0.14/README
+/usr/share/doc/aide-0.14/README.quickstart
+/usr/share/doc/aide-0.14/contrib
+/usr/share/doc/aide-0.14/contrib/bzip2.sh
+/usr/share/doc/aide-0.14/contrib/gpg2_check.sh
+/usr/share/doc/aide-0.14/contrib/gpg2_update.sh
+/usr/share/doc/aide-0.14/contrib/gpg_check.sh
+/usr/share/doc/aide-0.14/contrib/gpg_update.sh
+/usr/share/doc/aide-0.14/contrib/sshaide.sh
+/usr/share/doc/aide-0.14/manual.html
+/usr/share/man/man1/aide.1.gz
+/usr/share/man/man5/aide.conf.5.gz
+/var/lib/aide
+/var/log/aide
+
+======== rpm -ivh: install the package (successfully) ========
+
+# rpm -ivh /media/CentOS_6.2_Final/Packages/aide-0.14-3.el6.i686.rpm 
+Preparing...                ########################################### [100%]
+   1:aide                   ########################################### [100%]
+
+======== rpm -i with failed dependency ========
+
+# rpm -i amanda-2.6.1p2-7.el6.i686.rpm 
+error: Failed dependencies:
+	xinetd is needed by amanda-2.6.1p2-7.el6.i686
+
+======== installing amanda using yum ========
+
+# yum install amanda
+Loaded plugins: fastestmirror, refresh-packagekit, security
+Loading mirror speeds from cached hostfile
+ * base: mirrors.vooservers.com
+ * extras: mirrors.vooservers.com
+ * updates: mirror.prolocation.net
+Setting up Install Process
+Resolving Dependencies
+--> Running transaction check
+---> Package amanda.i686 0:2.6.1p2-7.el6 will be installed
+--> Processing Dependency: xinetd for package: amanda-2.6.1p2-7.el6.i686
+--> Running transaction check
+---> Package xinetd.i686 2:2.3.14-35.el6_3 will be installed
+--> Finished Dependency Resolution
+
+Dependencies Resolved
+
+=================================================================================================
+ Package             Arch              Version                        Repository            Size
+=================================================================================================
+Installing:
+ amanda              i686              2.6.1p2-7.el6                  base                 544 k
+Installing for dependencies:
+ xinetd              i686              2:2.3.14-35.el6_3              updates              122 k
+
+Transaction Summary
+=================================================================================================
+Install       2 Package(s)
+
+Total download size: 666 k
+Installed size: 1.9 M
+Is this ok [y/N]: y
+Downloading Packages:
+(1/2): amanda-2.6.1p2-7.el6.i686.rpm                                      | 544 kB     00:00     
+(2/2): xinetd-2.3.14-35.el6_3.i686.rpm                                    | 122 kB     00:00     
+-------------------------------------------------------------------------------------------------
+Total                                                            857 kB/s | 666 kB     00:00     
+Running rpm_check_debug
+Running Transaction Test
+Transaction Test Succeeded
+Running Transaction
+Warning: RPMDB altered outside of yum.
+  Installing : 2:xinetd-2.3.14-35.el6_3.i686                                                 1/2 
+  Installing : amanda-2.6.1p2-7.el6.i686                                                     2/2 
+
+Installed:
+  amanda.i686 0:2.6.1p2-7.el6                                                                    
+
+Dependency Installed:
+  xinetd.i686 2:2.3.14-35.el6_3                                                                  
+
+Complete!
+
+======== yum repolist (the initial out-of-the-box configuration) ========
+
+# yum repolist
+Loaded plugins: fastestmirror, refresh-packagekit, security
+Loading mirror speeds from cached hostfile
+ * base: anorien.csc.warwick.ac.uk
+ * extras: anorien.csc.warwick.ac.uk
+ * updates: archive.cs.uu.nl
+repo id                                 repo name                                          status
+base                                    CentOS-6 - Base                                    4,776
+extras                                  CentOS-6 - Extras                                      4
+updates                                 CentOS-6 - Updates                                   374
+repolist: 5,154
+
+======== yum repolist (after enabling additional repos) ========
+
+# yum repolist
+Loaded plugins: fastestmirror, refresh-packagekit, security
+Loading mirror speeds from cached hostfile
+ * base: mirror.simwood.com
+ * centosplus: mirror.simwood.com
+ * extras: mirror.simwood.com
+ * updates: mirrors.vooservers.com
+repo id                                  repo name                                         status
+base                                     CentOS-6 - Base                                   4,776
+centosplus                               CentOS-6 - Plus                                      28
+contrib                                  CentOS-6 - Contrib                                    0
+extras                                   CentOS-6 - Extras                                     4
+updates                                  CentOS-6 - Updates                                  374
+repolist: 5,182
+
+======== searching for mondo (initially, without the mondo repository) ========
+
+# yum search mondo
+Loaded plugins: fastestmirror, refresh-packagekit, security
+Loading mirror speeds from cached hostfile
+ * base: mirrors.vooservers.com
+ * centosplus: mirrors.vooservers.com
+ * extras: mirrors.vooservers.com
+ * updates: mirrors.vooservers.com
+Warning: No matches found for: mondo
+No Matches found
+
+======== Extra repo file for mondo ========
+
+[mondorescue]
+name=rhel 6 i386 - mondorescue Vanilla Packages
+baseurl=ftp://ftp.mondorescue.org//rhel/6/i386
+enabled=1
+gpgcheck=1
+gpgkey=ftp://ftp.mondorescue.org//rhel/6/i386/mondorescue.pubkey
+
+======== yum repolist after adding mondorescue.repo file ========
+
+# yum repolist
+Loaded plugins: fastestmirror, refresh-packagekit, security
+Loading mirror speeds from cached hostfile
+ * base: mirrors.vooservers.com
+ * centosplus: mirrors.vooservers.com
+ * extras: mirrors.vooservers.com
+ * updates: mirrors.vooservers.com
+mondorescue                                                               | 1.3 kB     00:00     
+mondorescue/primary                                                       |  18 kB     00:00     
+mondorescue                                                                                77/77
+repo id                       repo name                                                    status
+base                          CentOS-6 - Base                                              4,776
+centosplus                    CentOS-6 - Plus                                                 28
+contrib                       CentOS-6 - Contrib                                               0
+extras                        CentOS-6 - Extras                                                4
+mondorescue                   rhel 6 i386 - mondorescue Vanilla Packages                      77
+updates                       CentOS-6 - Updates                                             374
+repolist: 5,259
+
+======== yum search after enabling mondo repository ========
+
+# yum search mondo
+Loaded plugins: fastestmirror, refresh-packagekit, security
+Loading mirror speeds from cached hostfile
+ * base: mirrors.vooservers.com
+ * centosplus: mirrors.vooservers.com
+ * extras: mirrors.vooservers.com
+ * updates: mirrors.vooservers.com
+====================================== N/S Matched: mondo =======================================
+mondo.i386 : MondoRescue is a GPL Disaster Recovery and Cloning Solution
+
+  Name and summary matches only, use "search all" for everything.
+
+======== Installing mondo ========
+
+# yum install mondo
+Loaded plugins: fastestmirror, refresh-packagekit, security
+Loading mirror speeds from cached hostfile
+ * base: mirrors.vooservers.com
+ * centosplus: mirrors.vooservers.com
+ * extras: mirrors.vooservers.com
+ * updates: mirrors.vooservers.com
+Setting up Install Process
+Resolving Dependencies
+--> Running transaction check
+---> Package mondo.i386 0:3.0.2-1.rhel6 will be installed
+--> Processing Dependency: mindi >= 2.0.7 for package: mondo-3.0.2-1.rhel6.i386
+--> Processing Dependency: syslinux >= 1.52 for package: mondo-3.0.2-1.rhel6.i386
+--> Processing Dependency: afio for package: mondo-3.0.2-1.rhel6.i386
+--> Processing Dependency: buffer for package: mondo-3.0.2-1.rhel6.i386
+--> Running transaction check
+---> Package afio.i386 0:2.5-1.rhel6 will be installed
+---> Package buffer.i386 0:1.19-4.rhel6 will be installed
+---> Package mindi.i386 0:2.1.3-1.rhel6 will be installed
+--> Processing Dependency: mindi-busybox >= 1.7.3 for package: mindi-2.1.3-1.rhel6.i386
+---> Package syslinux.i686 0:4.02-7.el6 will be installed
+--> Running transaction check
+---> Package mindi-busybox.i386 0:1.18.5-1.rhel6 will be installed
+--> Finished Dependency Resolution
+
+Dependencies Resolved
+
+=================================================================================================
+ Package                  Arch            Version                   Repository              Size
+=================================================================================================
+Installing:
+ mondo                    i386            3.0.2-1.rhel6             mondorescue            1.3 M
+Installing for dependencies:
+ afio                     i386            2.5-1.rhel6               mondorescue             79 k
+ buffer                   i386            1.19-4.rhel6              mondorescue             23 k
+ mindi                    i386            2.1.3-1.rhel6             mondorescue            302 k
+ mindi-busybox            i386            1.18.5-1.rhel6            mondorescue            244 k
+ syslinux                 i686            4.02-7.el6                base                   858 k
+
+Transaction Summary
+=================================================================================================
+Install       6 Package(s)
+
+Total download size: 2.7 M
+Installed size: 5.6 M
+Is this ok [y/N]: y
+Downloading Packages:
+(1/6): afio-2.5-1.rhel6.i386.rpm                                          |  79 kB     00:00     
+(2/6): buffer-1.19-4.rhel6.i386.rpm                                       |  23 kB     00:00     
+(3/6): mindi-2.1.3-1.rhel6.i386.rpm                                       | 302 kB     00:00     
+(4/6): mindi-busybox-1.18.5-1.rhel6.i386.rpm                              | 244 kB     00:00     
+(5/6): mondo-3.0.2-1.rhel6.i386.rpm                                       | 1.3 MB     00:01     
+(6/6): syslinux-4.02-7.el6.i686.rpm                                       | 858 kB     00:00     
+-------------------------------------------------------------------------------------------------
+Total                                                            565 kB/s | 2.7 MB     00:04     
+warning: rpmts_HdrFromFdno: Header V4 DSA/SHA1 Signature, key ID 37db9883: NOKEY
+Retrieving key from ftp://ftp.mondorescue.org//rhel/6/i386/mondorescue.pubkey
+Importing GPG key 0x37DB9883:
+ Userid: "Bruno Cornec (primary address) <bruno@victoria.frmug.org>"
+ From  : ftp://ftp.mondorescue.org//rhel/6/i386/mondorescue.pubkey
+Is this ok [y/N]: y
+Running rpm_check_debug
+Running Transaction Test
+Transaction Test Succeeded
+Running Transaction
+  Installing : syslinux-4.02-7.el6.i686                                                      1/6 
+  Installing : buffer-1.19-4.rhel6.i386                                                      2/6 
+  Installing : afio-2.5-1.rhel6.i386                                                         3/6 
+  Installing : mindi-busybox-1.18.5-1.rhel6.i386                                             4/6 
+  Installing : mindi-2.1.3-1.rhel6.i386                                                      5/6 
+  Installing : mondo-3.0.2-1.rhel6.i386                                                      6/6 
+
+Installed:
+  mondo.i386 0:3.0.2-1.rhel6                                                                     
+
+Dependency Installed:
+  afio.i386 0:2.5-1.rhel6               buffer.i386 0:1.19-4.rhel6   mindi.i386 0:2.1.3-1.rhel6  
+  mindi-busybox.i386 0:1.18.5-1.rhel6   syslinux.i686 0:4.02-7.el6  
+
+Complete!
+[root@centos62 yum.repos.d]# 
+
+======== Verifying a package ========
+
+$ rpm --verify initscripts
+..5....T.  c /etc/inittab
+S.5....T.    /etc/sysconfig/network-scripts/network-functions
+S.5....T.    /sbin/ifdown
+S.5....T.    /sbin/ifup
+
+======== Removing a package that no other packages depend on ========
+
+# rpm --erase aide
+
+======== Failing to remove a package that others depend on ========
+
+# rpm --erase mindi
+error: Failed dependencies:
+	mindi >= 2.0.7 is needed by (installed) mondo-3.0.2-1.rhel6.i386
+
+
