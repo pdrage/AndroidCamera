@@ -31,6 +31,8 @@ import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
+import org.apache.commons.net.ftp.*;
+
 public class MyCameraActivity extends Activity {
   
   // Use constants above API 11 (MediaStore.Files.FileColumns)
@@ -340,7 +342,29 @@ public class MyCameraActivity extends Activity {
     lin.addView(button);    
   }
 
-  
+
+  private void sendFTPFile (){
+/* Connect to an FTP server */
+
+      MyFTPClient mFTPClient = null;
+      boolean status = false;
+
+      mFTPClient = new MyFTPClient();
+      // connecting to the host
+      status = mFTPClient.ftpConnect("ftp.drivehq.com", "FTP_UID", "FTP_PW",21);
+      // now check the reply code, if positive mean connection success
+      if (status) {
+
+  /* now send a file */
+          String srcFilePath = "home";
+          String desFileName = "file1.txt";
+          String desDirectory = "home";
+          status = mFTPClient.ftpUpload( srcFilePath, desFileName, desDirectory, getApplicationContext());
+          Log.e(TAG, "FTP upload request has status of " + status);
+
+      }
+  }
+
   
   class SaveImageTask extends AsyncTask<byte[], String, String> {
     @Override
