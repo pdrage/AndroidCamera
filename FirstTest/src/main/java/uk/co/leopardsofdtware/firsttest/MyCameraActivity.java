@@ -368,62 +368,58 @@ public class MyCameraActivity extends Activity {
 
                 File directory = new File(Environment.getExternalStoragePublicDirectory(
                         Environment.DIRECTORY_PICTURES), getPackageName());
+                //creates this directory if its not there??
+                File sd = new File(directory.getAbsolutePath());
+                Log.e(TAG, "Source Directory is " + sd.toString() );
 
+                File[] sdDirList = sd.listFiles();
+                Log.e(TAG, "There are " + sdDirList.length + " files in  " + sd.toString() );
 
-                  mFTPClient = new MyFTPClient();
-                  // connecting to the host
-                  status = mFTPClient.ftpConnect("ftp.drage.me.uk", "drageuk", "april96",21);
-                  // now check the reply code, if positive mean connection success
-                  Log.e(TAG, "FTPconnect has status of " + status);
-                  if (status) {
+                if (sdDirList.length > 0 ) {
 
-              /* debug - show Pictures Directory */
-                      Log.e(TAG, "Directory = " + directory.getAbsolutePath());
+                    mFTPClient = new MyFTPClient();
+                      // connecting to the host
+                      status = mFTPClient.ftpConnect("ftp.drage.me.uk", "drageuk", "april96",21);
+                      // now check the reply code, if positive mean connection success
+                      Log.e(TAG, "FTPconnect has status of " + status);
+                      if (status) {
 
-              /* debug get REMOTE working directory */
-                      String WD = mFTPClient.ftpGetCurrentWorkingDirectory();
-                      Log.e(TAG, "Working directory is " + WD);
+                  /* debug - show Pictures Directory */
+                          Log.e(TAG, "Directory = " + directory.getAbsolutePath());
 
-              /* now send a file */
-                      String srcFilePath = "/mnt/sdcard/Pictures/uk.co.leopardsofdtware.firsttest/IMG_20140117_204503.jpg";
-                      String desFileName = "file1.jpg";
-                      String desDirectory = "/public_html/CWU";
-                /* Change ftp working directory */
+                  /* debug get REMOTE working directory */
+                        String WD = mFTPClient.ftpGetCurrentWorkingDirectory();
+                        Log.e(TAG, "Working directory is " + WD);
 
-                      status = mFTPClient.ftpChangeDirectory(desDirectory);
-
-              //        Context context = getApplicationContext();
-              //        FileInputStream srcFileStream = context.openFileInput(srcFilePath);
-              //        status = mFTPClient.storeFile(desFileName, srcFileStream);
-              //        srcFileStream.close();
-
-                      //creates this directory if its not there??
-                      File sd = new File(directory.getAbsolutePath());
-                      Log.e(TAG, "Source Directory is " + sd.toString() );
+                  /* now send a file */
+                          String desDirectory = "/public_html/CWU";
+                          status = mFTPClient.ftpChangeDirectory(desDirectory);
 
                       //gets a list of the files
-                      try{
-                        File[] sdDirList = sd.listFiles();
-
-                        Log.e(TAG, "There are " + sdDirList.length + " files in  " + sd.toString() );
+                          try{
 
 
-                        for(int i=0;i<sdDirList.length;i++){
+                            for(int i=sdDirList.length-1;i>-1;i--){
 
-                          srcFilePath = sdDirList[i].toString();
-                          desFileName = sdDirList[i].toString().substring(sdDirList[i].toString().lastIndexOf("/")+1);
-                          Log.e (TAG, "uploading " +srcFilePath + " as " + desFileName + " into " + desDirectory);
-                          status = mFTPClient.ftpUpload( srcFilePath, desFileName, desDirectory, getApplicationContext());
-                          Log.e(TAG, "FTP upload request has status of " + status);
-                        }
-                      }
-                      catch (Exception e){
-                        Log.e(TAG, "Exception listing directory " + e.getMessage());
-                      }
-                  }
-                Log.e(TAG, "Discconect and sleep");
-                  mFTPClient.ftpDisconnect();
-                  Thread.sleep(10000);
+                              String srcFilePath = sdDirList[i].toString();
+                              String desFileName = sdDirList[i].toString().substring(sdDirList[i].toString().lastIndexOf("/")+1);
+                              Log.e (TAG, "uploading " +srcFilePath + " as " + desFileName + " into " + desDirectory);
+                              status = mFTPClient.ftpUpload( srcFilePath, desFileName, desDirectory, getApplicationContext());
+                              Log.e(TAG, "FTP upload request has status of " + status);
+                              // delete the source file..
+                              if(status) sdDirList[i].delete();
+                            } // end for
+                          } // end try
+                          catch (Exception e){
+                            Log.e(TAG, "Exception listing directory " + e.getMessage());
+                          } // end catch
+                      } // end if status OK on connect
+                    Log.e(TAG, "Disconnect");
+                    mFTPClient.ftpDisconnect();
+                } // end if files to transmit
+                Log.e(TAG, "Sleep");
+
+                Thread.sleep(100000); // 100 seconds
               } //. end of loop
           catch (Exception e){
             e.printStackTrace();
