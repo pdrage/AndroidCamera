@@ -2,6 +2,7 @@ package uk.co.leopardsofdtware.firsttest;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -59,6 +60,9 @@ public class MyCameraActivity extends Activity {
     camera = getCameraInstance();
       setCameraDisplayOrientation(this, 0, camera);
     setUpLayout();
+
+     FTPClass task = new FTPClass();
+    task.execute(new String[] { "http://www.vogella.com" });
   }
 
     public static void setCameraDisplayOrientation(Activity activity,
@@ -343,27 +347,96 @@ public class MyCameraActivity extends Activity {
   }
 
 
-  private void sendFTPFile (){
-/* Connect to an FTP server */
+    /*
+    **************************  FTP Code ************
+     */
 
-      MyFTPClient mFTPClient = null;
-      boolean status = false;
+  private class FTPClass  extends AsyncTask<String, Void, String>{
+    @Override
+    protected String doInBackground(String... urls) {
 
-      mFTPClient = new MyFTPClient();
-      // connecting to the host
-      status = mFTPClient.ftpConnect("ftp.drivehq.com", "FTP_UID", "FTP_PW",21);
-      // now check the reply code, if positive mean connection success
-      if (status) {
+        Log.e (TAG, "Urls = " + urls);
+        while(1==1) {
+            try {
+    /* Loop forever */
 
-  /* now send a file */
-          String srcFilePath = "home";
-          String desFileName = "file1.txt";
-          String desDirectory = "home";
-          status = mFTPClient.ftpUpload( srcFilePath, desFileName, desDirectory, getApplicationContext());
-          Log.e(TAG, "FTP upload request has status of " + status);
 
-      }
+    /* Connect to an FTP server */
+
+                  MyFTPClient mFTPClient = null;
+                  boolean status = false;
+
+                File directory = new File(Environment.getExternalStoragePublicDirectory(
+                        Environment.DIRECTORY_PICTURES), getPackageName());
+
+
+                  mFTPClient = new MyFTPClient();
+                  // connecting to the host
+                  status = mFTPClient.ftpConnect("ftp.drage.me.uk", "drageuk", "april96",21);
+                  // now check the reply code, if positive mean connection success
+                  Log.e(TAG, "FTPconnect has status of " + status);
+                  if (status) {
+
+              /* debug - show Pictures Directory */
+                      Log.e(TAG, "Directory = " + directory.getAbsolutePath());
+
+              /* debug get REMOTE working directory */
+                      String WD = mFTPClient.ftpGetCurrentWorkingDirectory();
+                      Log.e(TAG, "Working directory is " + WD);
+
+              /* now send a file */
+                      String srcFilePath = "/mnt/sdcard/Pictures/uk.co.leopardsofdtware.firsttest/IMG_20140117_204503.jpg";
+                      String desFileName = "file1.jpg";
+                      String desDirectory = "/public_html/CWU";
+                /* Change ftp working directory */
+
+                      status = mFTPClient.ftpChangeDirectory(desDirectory);
+
+              //        Context context = getApplicationContext();
+              //        FileInputStream srcFileStream = context.openFileInput(srcFilePath);
+              //        status = mFTPClient.storeFile(desFileName, srcFileStream);
+              //        srcFileStream.close();
+
+                      //creates this directory if its not there??
+                      File sd = new File(directory.getAbsolutePath());
+                      Log.e(TAG, "Source Directory is " + sd.toString() );
+
+                      //gets a list of the files
+                      try{
+                        File[] sdDirList = sd.listFiles();
+
+                        Log.e(TAG, "There are " + sdDirList.length + " files in  " + sd.toString() );
+
+
+                        for(int i=0;i<sdDirList.length;i++){
+
+                          srcFilePath = sdDirList[i].toString();
+                          desFileName = sdDirList[i].toString().substring(sdDirList[i].toString().lastIndexOf("/")+1);
+                          Log.e (TAG, "uploading " +srcFilePath + " as " + desFileName + " into " + desDirectory);
+                          status = mFTPClient.ftpUpload( srcFilePath, desFileName, desDirectory, getApplicationContext());
+                          Log.e(TAG, "FTP upload request has status of " + status);
+                        }
+                      }
+                      catch (Exception e){
+                        Log.e(TAG, "Exception listing directory " + e.getMessage());
+                      }
+                  }
+                Log.e(TAG, "Discconect and sleep");
+                  mFTPClient.ftpDisconnect();
+                  Thread.sleep(10000);
+              } //. end of loop
+          catch (Exception e){
+            e.printStackTrace();
+            }
+        } // end of while loop
+
+
   }
+    @Override
+    protected void onPostExecute(String result) {
+        Log.e(TAG, "onPostExecute run");
+    }
+}
 
   
   class SaveImageTask extends AsyncTask<byte[], String, String> {
