@@ -214,8 +214,11 @@ public class MyFTPClient {
             try {
                 // FileInputStream srcFileStream = new FileInputStream(srcFilePath);
 
-                FileInputStream srcFileStream = context.openFileInput(srcFilePath);
+//original
+//                FileInputStream srcFileStream = context.openFileInput(srcFilePath);
 
+                // load file from srcFile, not Context
+                FileInputStream srcFileStream = new FileInputStream(srcFilePath);
                 // change working directory to the destination directory
                 //if (ftpChangeDirectory(desDirectory)) {
                 status = mFTPClient.storeFile(desFileName, srcFileStream);
