@@ -42,7 +42,7 @@ public class MyFTPClient {
 	             * EBCDIC_FILE_TYPE .etc. Here, I use BINARY_FILE_TYPE
 	             * for transferring text, image, and compressed files.
 	             */
-                    mFTPClient.setFileType(FTP.ASCII_FILE_TYPE);
+                    mFTPClient.setFileType(FTP.BINARY_FILE_TYPE);
                     mFTPClient.enterLocalPassiveMode();
 
                     return status;
