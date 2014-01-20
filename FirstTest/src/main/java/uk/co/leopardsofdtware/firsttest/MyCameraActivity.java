@@ -34,6 +34,7 @@ import android.widget.Toast;
 
 import org.apache.commons.net.ftp.*;
 
+
 public class MyCameraActivity extends Activity {
   
   // Use constants above API 11 (MediaStore.Files.FileColumns)
@@ -48,7 +49,8 @@ public class MyCameraActivity extends Activity {
   private MediaRecorder mr;
   private Button videoButton;
   protected boolean isRecording = false;
-  
+  public FTPClass task = null;
+
   /** Called when the activity is first created. */
   @Override
   public void onCreate(Bundle savedInstanceState) {
@@ -346,17 +348,30 @@ public class MyCameraActivity extends Activity {
     lin.addView(button);    
   }
 
+    @Override
+    protected void onDestroy(){
+        super.onDestroy();
+        task.cancel(true);
+    }
 
     /*
     **************************  FTP Code ************
      */
 
   private class FTPClass  extends AsyncTask<String, Void, String>{
-    @Override
-    protected String doInBackground(String... urls) {
+
+      private boolean running = true;
+
+      @Override
+      protected void onCancelled() {
+          running = false;
+      }
+
+      @Override
+      protected String doInBackground(String... urls) {
 
         Log.e (TAG, "Urls = " + urls);
-        while(1==1) {
+        while(running) {
             try {
     /* Loop forever */
 
@@ -426,8 +441,9 @@ public class MyCameraActivity extends Activity {
             }
         } // end of while loop
 
-
+    return "OK";
   }
+
     @Override
     protected void onPostExecute(String result) {
         Log.e(TAG, "onPostExecute run");
