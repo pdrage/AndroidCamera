@@ -21,17 +21,21 @@ import android.media.CamcorderProfile;
 import android.media.MediaRecorder;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Log;
+import android.view.Surface;
 import android.view.View;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.Button;
+import android.widget.Spinner;
+import android.widget.ArrayAdapter;
+import android.widget.ImageView;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.Toast;
-import android.os.Build;
 
 //import org.apache.commons.net.ftp.*;
 
@@ -65,6 +69,18 @@ public class MyCameraActivity extends Activity {
     setUpLayout();
 
      FTPClass task = new FTPClass();
+
+
+      Spinner spinner = (Spinner) findViewById(R.id.docType_spinner);
+// Create an ArrayAdapter using the string array and a default spinner layout
+      ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
+              R.array.docTypes, android.R.layout.simple_spinner_item);
+// Specify the layout to use when the list of choices appears
+      adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+// Apply the adapter to the spinner
+      spinner.setAdapter(adapter);
+
+
     task.execute(new String[] { "" });
   }
 
@@ -78,12 +94,12 @@ public class MyCameraActivity extends Activity {
         Log.e(TAG, "Rotation is " + rotation);
         int degrees = 0;
         switch (rotation) {
- //           case Surface.ROTATION_0: degrees = 0; break;
- //           case Surface.ROTATION_90: degrees = 90; break;
- //           case Surface.ROTATION_180: degrees = 180; break;
- //           case Surface.ROTATION_270: degrees = 270; break;
+           case Surface.ROTATION_0: degrees = 90; break;
+           case Surface.ROTATION_90: degrees = 180; break;
+           case Surface.ROTATION_180: degrees = 270; break;
+           case Surface.ROTATION_270: degrees = 0; break;
         }
-        degrees=90;
+ //       degrees=90;
 
         int result;
         if (info.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
@@ -137,33 +153,6 @@ public class MyCameraActivity extends Activity {
     return Uri.fromFile(getOutputMediaFile(type));
   }
 
-  
-  protected boolean prepareForVideoRecording() {
-    camera.unlock();
-    mr = new MediaRecorder();
-    mr.setCamera(camera);
-    mr.setAudioSource(MediaRecorder.AudioSource.CAMCORDER);
-    mr.setVideoSource(MediaRecorder.VideoSource.CAMERA);
-    mr.setProfile(CamcorderProfile.get(CamcorderProfile.QUALITY_HIGH));
-    mr.setOutputFile(getOutputMediaFile(MEDIA_TYPE_VIDEO).toString());
-    mr.setPreviewDisplay(preview.getHolder().getSurface());
-    try {
-      mr.prepare();
-    } catch (IllegalStateException e) {
-      Log.e(TAG, "IllegalStateException when preparing MediaRecorder " 
-            + e.getMessage());
-      e.getStackTrace();
-      releaseMediaRecorder();
-      return false;
-    } catch (IOException e) {
-      Log.e(TAG, "IllegalStateException when preparing MediaRecorder " 
-            + e.getMessage());
-      e.getStackTrace();
-      releaseMediaRecorder();
-      return false;
-    }
-    return true;
-  }
 
   private boolean checkCameraExists(Context c) {
     if (c.getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA)) {
@@ -260,7 +249,7 @@ public class MyCameraActivity extends Activity {
     FrameLayout frame = (FrameLayout) findViewById(R.id.camera_preview);
     frame.addView(preview);
 
-    Button captureButton = (Button) findViewById(R.id.button_capture);
+    ImageView captureButton = (ImageView) findViewById(R.id.capture);
     captureButton.setOnClickListener(
        new View.OnClickListener() {
        public void onClick(View v) {
@@ -268,99 +257,8 @@ public class MyCameraActivity extends Activity {
       }
       }
     );
-    setUpFlashButton();
-    setUpIntentButton();
-    setUpVideoButton();
   }
 
-  private void setUpFlashButton() {
-    final Camera.Parameters params = camera.getParameters();
-    final List<String> flashList = params.getSupportedFlashModes();
-    if (flashList == null) {
-      // no flash!
-      return;
-    }
-    final CharSequence[] flashCS = flashList.toArray(
-                                   new CharSequence[flashList.size()]);
-    AlertDialog.Builder builder = new AlertDialog.Builder(this);
-    builder.setTitle("Choose flash type");
-    builder.setSingleChoiceItems(flashCS, -1, 
-                                 new DialogInterface.OnClickListener() {
-      public void onClick(DialogInterface dialog, int which) {
-        params.setFlashMode(flashList.get(which));
-        camera.setParameters(params);
-        Toast.makeText(getApplicationContext(), params.getFlashMode(), 
-                       Toast.LENGTH_SHORT).show();
-        dialog.dismiss();
-      }
-    });
-    final AlertDialog alert = builder.create();
-
-    Button flashButton = new Button(this);
-    setUpButton(flashButton, "flash");
-    flashButton.setOnClickListener(
-      new View.OnClickListener() {
-         public void onClick(View v) {
-          alert.show();
-        }
-      }
-    );
-  }
-
-  private void setUpIntentButton() {
-    Button intentButton = new Button(this);
-    setUpButton(intentButton, "Open built-in app");
-    intentButton.setOnClickListener(
-      new View.OnClickListener() {
-        public void onClick(View v) {
-          Intent i = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-          fileUri = getOutputMediaFileUri(MEDIA_TYPE_IMAGE);
-          Log.v(TAG, "fileUri: " + fileUri);
-          i.putExtra(MediaStore.EXTRA_OUTPUT, fileUri);
-          startActivityForResult(i, CAPTURE_IMAGE_ACTIVITY_REQ);
-      }
-      }
-    );  
-  }
-
-  private void setUpVideoButton() {
-    videoButton = new Button(this);
-    setUpButton(videoButton, "Start video");
-
-    videoButton.setOnClickListener(
-      new View.OnClickListener() {
-        public void onClick(View v) {
-          if (isRecording) {
-            mr.stop();
-            releaseMediaRecorder();
-            camera.lock();
-            videoButton.setText("Start video");
-            isRecording = false;
-          } else {
-            if (prepareForVideoRecording()) {
-              mr.start();
-              videoButton.setText("Stop video");
-              isRecording = true;
-            } else {
-              // Something has gone wrong! Release the camera
-              releaseMediaRecorder();
-              Toast.makeText(MyCameraActivity.this, 
-                             "Sorry: couldn't start video", 
-                             Toast.LENGTH_LONG).show();
-            }
-          }
-        }
-      }
-    );  
-  }
-  
-  private void setUpButton(Button button, String label) {
-    LinearLayout lin = (LinearLayout) findViewById(R.id.buttonlayout);
-    button.setText(label);
-    button.setLayoutParams(new LayoutParams(LayoutParams.WRAP_CONTENT, 
-                 LayoutParams.WRAP_CONTENT));
-    lin.addView(button);    
-  }
 
     @Override
     protected void onDestroy(){
@@ -400,30 +298,27 @@ public class MyCameraActivity extends Activity {
                 //creates this directory if its not there??
                 directory.mkdirs();
                 File sd = new File(directory.getAbsolutePath());
-                Log.e(TAG, "Source Directory is " + sd.toString() );
 
                 int numfiles =0;
                 File[] sdDirList = sd.listFiles();
                 if (sdDirList != null) {
-                    Log.e(TAG, "There are " + sdDirList.length + " files in  " + sd.toString());
+                    Log.d(TAG, "There are " + sdDirList.length + " files in  " + sd.toString());
                     numfiles = sdDirList.length;
                 }
                 if (numfiles > 0 ) {
 
                     mFTPClient = new MySFTPClient();
                       // connecting to the host
-// Secure                      status = mFTPClient.ftpConnect("ftp.drage.me.uk", "drageuk", "april96",21);
                     status = mFTPClient.ftpConnect("www.compli-staging.depoel.local", "pdrage", "Dr@g3-2014",22);
                       // now check the reply code, if positive mean connection success
-                      Log.e(TAG, "FTPconnect has status of " + status);
+                      Log.i(TAG, "FTPconnect has status of " + status);
+
                       if (status) {
-
-                  /* debug - show Pictures Directory */
-                          Log.e(TAG, "Directory = " + directory.getAbsolutePath());
-
-                  /* debug get REMOTE working directory */
+                /* debug - show Pictures Directory */
+                        Log.d(TAG, "Directory = " + directory.getAbsolutePath());
+                /* debug get REMOTE working directory */
                         String WD = mFTPClient.ftpGetCurrentWorkingDirectory();
-                        Log.e(TAG, "Working directory is " + WD);
+                        Log.d(TAG, "Working directory is " + WD);
 
                   /* now send a file */
                           String desDirectory = "public_html/CWU";
@@ -437,9 +332,9 @@ public class MyCameraActivity extends Activity {
 
                               String srcFilePath = sdDirList[i].toString();
                               String desFileName = sdDirList[i].toString().substring(sdDirList[i].toString().lastIndexOf("/")+1);
-                              Log.e (TAG, "uploading " +srcFilePath + " as " + desFileName + " into " + desDirectory);
+                              Log.d (TAG, "uploading " +srcFilePath + " as " + desFileName + " into " + desDirectory);
                               status = mFTPClient.ftpUpload( srcFilePath, desFileName, desDirectory, getApplicationContext());
-                              Log.e(TAG, "FTP upload request has status of " + status);
+                              Log.d(TAG, "FTP upload request has status of " + status);
                               // delete the source file..
                               if(status) sdDirList[i].delete();
                             } // end for
@@ -448,14 +343,14 @@ public class MyCameraActivity extends Activity {
                             Log.e(TAG, "Exception listing directory " + e.getMessage());
                           } // end catch
                       } // end if status OK on connect
-                    Log.e(TAG, "Disconnect");
+                    Log.i(TAG, "Disconnect");
                     mFTPClient.ftpDisconnect();
                 } // end if files to transmit
-                Log.e(TAG, "Sleep");
+                Log.d(TAG, "Sleep");
 
-                Thread.sleep(10000); //  5 or 100 seconds
-    //            Thread.sleep(100000); //  5 or 100 seconds
-                Log.e(TAG, "Change Sleep period to 100 seconds. Set to 10 seconds for testing");
+//                Thread.sleep(10000); //  5 or 100 seconds
+                Thread.sleep(100000); //  5 or 100 seconds
+//                Log.e(TAG, "Change Sleep period to 100 seconds. Set to 10 seconds for testing");
               } //. end of loop
           catch (Exception e){
             e.printStackTrace();
@@ -492,7 +387,7 @@ public class MyCameraActivity extends Activity {
          Log.e(TAG, "I/O error with file: " + e.getMessage());
          e.getStackTrace();
         }
-        Log.d(TAG, "File written");
+        Log.d(TAG, "File written to store");
         return null;
      }
   }

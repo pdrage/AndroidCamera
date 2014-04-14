@@ -3,10 +3,7 @@ package uk.co.leopardsoftware.firsttest;
 import android.content.Context;
 import android.util.Log;
 
-//import org.apache.commons.net.PrintCommandListener;
-
 import com.jcraft.jsch.*;
-
 import java.io.File;
 
 /**
@@ -18,11 +15,8 @@ public class MySFTPClient {
         //Now, declare a public FTP client object.
 
         private static final String TAG = "MySFTPClient";
-//        public FTPClient mFTPClient = null;
-//        public SFTPClient mFTPClient = null;
 
         private Session session = null;
-//        private UserInfo ui = null;
         ChannelSftp c = null;
 
     //Method to connect to FTP server:
@@ -33,19 +27,15 @@ public class MySFTPClient {
             try {
                 JSch jsch = new JSch();
 
-//                host = null;
-//                String user = username;
-//                port = 22;
-
                 session = jsch.getSession(username, host, port);
                 session.setConfig("StrictHostKeyChecking", "no");
                 session.setPassword(password);
 
                 jsch.addIdentity("/storage/emulated/0/uk.co.leopardsoftware/id_rsa", "pDr46@.2012");
 
-                Log.e(TAG, "attempting to connect with " + username + ", " + password + ", " +host+ ", " + port);
+                Log.i(TAG, "attempting to connect with " + username + ", " + password + ", " +host+ ", " + port);
                 session.connect();
-                Log.e(TAG, "connected?");
+                Log.i(TAG, "connected?");
 
                 Channel channel = session.openChannel("sftp");
                 channel.connect();
@@ -67,7 +57,7 @@ public class MySFTPClient {
             try {
                 session.disconnect();
             } catch (Exception e) {
-                Log.d(TAG, "Error occurred while disconnecting from ftp server.");
+                Log.i(TAG, "Error occurred while disconnecting from ftp server.");
             }
 
             return false;
@@ -131,9 +121,8 @@ public class MySFTPClient {
          */
         public boolean ftpDownload(String srcFilePath, String desFilePath)
         {
-            boolean status = false;
-
-            return status;
+           boolean status = false;
+           return status;
         }
 
         //Method to upload a file to FTP server:
@@ -153,15 +142,12 @@ public class MySFTPClient {
 
                 Log.e(TAG, "Attempting upload of  " + srcFilePath + " into " +  desDirectory+"/"+desFileName);
                 File f = new File(srcFilePath);
-                if(f.exists() && !f.isDirectory()){
-                    Log.e(TAG, "Source file exists OK");
-                }
                 c.put(srcFilePath, desDirectory+"/"+desFileName, null, mode);
 
                 return true;
             }
             catch (Exception e) {
-                Log.d(TAG, "upload failed: " + e);
+                Log.i(TAG, "upload failed: " + e);
             }
 
             return false;
