@@ -25,4 +25,5 @@ android {
 dependencies {
     compile 'com.android.support:appcompat-v7:+'
     compile files('src/libs/org.apache.commons.net_2.0.0.v200905272248.jar')
+    compile files('src/libs/jsch-0.1.51.jar')
 }

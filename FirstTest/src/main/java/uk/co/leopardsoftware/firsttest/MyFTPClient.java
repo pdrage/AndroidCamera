@@ -1,6 +1,6 @@
-package uk.co.leopardsofdtware.firsttest;
+package uk.co.leopardsoftware.firsttest;
 
-        import java.io.BufferedInputStream;
+//        import java.io.BufferedInputStream;
         import java.io.FileInputStream;
         import java.io.FileOutputStream;
 

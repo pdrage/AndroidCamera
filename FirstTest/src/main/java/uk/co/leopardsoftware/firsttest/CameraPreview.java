@@ -1,4 +1,4 @@
-package uk.co.leopardsofdtware.firsttest;
+package uk.co.leopardsoftware.firsttest;
 
 import java.io.IOException;
 

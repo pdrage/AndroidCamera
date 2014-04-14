@@ -1,4 +1,4 @@
-package uk.co.leopardsofdtware.firsttest;
+package uk.co.leopardsoftware.firsttest;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -33,7 +33,7 @@ import android.widget.LinearLayout;
 import android.widget.Toast;
 import android.os.Build;
 
-import org.apache.commons.net.ftp.*;
+//import org.apache.commons.net.ftp.*;
 
 
 public class MyCameraActivity extends Activity {
@@ -65,7 +65,7 @@ public class MyCameraActivity extends Activity {
     setUpLayout();
 
      FTPClass task = new FTPClass();
-    task.execute(new String[] { "http://www.vogella.com" });
+    task.execute(new String[] { "" });
   }
 
     public static void setCameraDisplayOrientation(Activity activity,
@@ -392,7 +392,7 @@ public class MyCameraActivity extends Activity {
 
     /* Connect to an FTP server */
 
-                  MyFTPClient mFTPClient = null;
+                  MySFTPClient mFTPClient = null;
                   boolean status = false;
 
                 File directory = new File(Environment.getExternalStoragePublicDirectory(
@@ -410,7 +410,7 @@ public class MyCameraActivity extends Activity {
                 }
                 if (numfiles > 0 ) {
 
-                    mFTPClient = new MyFTPClient();
+                    mFTPClient = new MySFTPClient();
                       // connecting to the host
 // Secure                      status = mFTPClient.ftpConnect("ftp.drage.me.uk", "drageuk", "april96",21);
                     status = mFTPClient.ftpConnect("www.compli-staging.depoel.local", "pdrage", "Dr@g3-2014",22);
@@ -426,7 +426,7 @@ public class MyCameraActivity extends Activity {
                         Log.e(TAG, "Working directory is " + WD);
 
                   /* now send a file */
-                          String desDirectory = "/public_html/CWU";
+                          String desDirectory = "public_html/CWU";
                           status = mFTPClient.ftpChangeDirectory(desDirectory);
 
                       //gets a list of the files
