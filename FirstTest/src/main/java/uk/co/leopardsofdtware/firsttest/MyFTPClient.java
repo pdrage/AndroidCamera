@@ -9,6 +9,29 @@ package uk.co.leopardsofdtware.firsttest;
         import android.content.Context;
         import android.util.Log;
 
+        import java.io.FileNotFoundException;
+        import java.io.IOException;
+        import java.io.PrintWriter;
+        import java.security.KeyManagementException;
+        import java.security.KeyStore;
+        import java.security.KeyStoreException;
+        import java.security.NoSuchAlgorithmException;
+        import java.security.UnrecoverableKeyException;
+        import java.security.cert.CertificateException;
+
+        import javax.net.ssl.KeyManager;
+        import javax.net.ssl.KeyManagerFactory;
+        import javax.net.ssl.SSLContext;
+        import javax.net.ssl.TrustManager;
+        import javax.net.ssl.TrustManagerFactory;
+
+        import org.apache.commons.net.PrintCommandListener;
+//        import org.apache.commons.net.ftp.FTPFile;
+//        import org.apache.commons.net.ftp.FTPSClient;
+//        import org.apache.commons.net.ftp.FTPSSocketFactory;
+
+
+
 /**
  * Created by pdrage on 16/01/2014.
  * from https://drivehq.com/file/DFPublishFile.aspx/FileID1252023466/Keyw1t2o9x5oqoj/MyFTPClient.java
@@ -19,14 +42,42 @@ public class MyFTPClient {
         //Now, declare a public FTP client object.
 
         private static final String TAG = "MyFTPClient";
-        public FTPClient mFTPClient = null;
+//        public FTPClient mFTPClient = null;
+        public FTPSClient mFTPClient = null;
+        private static final String KEYSTORE_PASS = "******"; //yes, really 6*
+        private static final String KEYSTORE_FILE_NAME = "storage/emulated/0/uk.co.leopardsoftware/keystore";
 
-        //Method to connect to FTP server:
+
+    //Method to connect to FTP server:
         public boolean ftpConnect(String host, String username,
                                   String password, int port)
         {
+            String protocol = "TLS"; // SSL/TLS
+
             try {
-                mFTPClient = new FTPClient();
+ // Secure..               mFTPClient = new FTPClient();
+                mFTPClient = new FTPSClient(protocol, false);
+
+                mFTPClient.setRemoteVerificationEnabled(false);
+                SSLContext sslContext = getSSLContext();
+                FTPSSocketFactory sf = new FTPSSocketFactory(sslContext);
+                mFTPClient.setSocketFactory(sf);
+                mFTPClient.setBufferSize(1000);
+                KeyManager keyManager = getKeyManagers()[0];
+                TrustManager trustManager = getTrustManagers()[0];
+                mFTPClient.setControlEncoding("UTF-8");
+
+                mFTPClient.setKeyManager(keyManager);
+                mFTPClient.setTrustManager(trustManager);
+
+                mFTPClient.addProtocolCommandListener(new PrintCommandListener(
+                        new PrintWriter(System.out)));
+
+  // end secure
+
+
+
+
                 // connecting to the host
                 mFTPClient.connect(host, port);
 
@@ -47,8 +98,34 @@ public class MyFTPClient {
 
                     return status;
                 }
+            } catch (IOException e) {
+                if (mFTPClient.isConnected()) {
+                    try {
+                        mFTPClient.disconnect();
+                    } catch (IOException f) {
+                        // do nothing
+                    }
+                }
+                System.err.println("Could not connect to server.");
+                e.printStackTrace();
+            } catch (UnrecoverableKeyException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            } catch (NoSuchAlgorithmException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            } catch (KeyStoreException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            } catch (CertificateException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            } catch (KeyManagementException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
             } catch(Exception e) {
                 Log.d(TAG, "Error: could not connect to host " + host );
+                Log.d(TAG, "Message = " + e.getMessage());
             }
 
             return false;
@@ -233,5 +310,32 @@ public class MyFTPClient {
 
             return status;
         }
+
+    private static SSLContext getSSLContext() throws KeyManagementException, KeyStoreException, NoSuchAlgorithmException, CertificateException, FileNotFoundException, UnrecoverableKeyException, IOException {
+        TrustManager[] tm = getTrustManagers();
+        System.out.println("Init SSL Context");
+        SSLContext sslContext = SSLContext.getInstance("SSLv3");
+        sslContext.init(null, tm, null);
+
+        return sslContext;
+    }
+    private static KeyManager[] getKeyManagers() throws KeyStoreException, NoSuchAlgorithmException, CertificateException, FileNotFoundException, IOException, UnrecoverableKeyException {
+        KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType());
+        ks.load(new FileInputStream(KEYSTORE_FILE_NAME), KEYSTORE_PASS.toCharArray());
+
+        KeyManagerFactory tmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+        tmf.init(ks, KEYSTORE_PASS.toCharArray());
+
+        return tmf.getKeyManagers();
+    }
+    private static TrustManager[] getTrustManagers() throws KeyStoreException, NoSuchAlgorithmException, CertificateException, FileNotFoundException, IOException, UnrecoverableKeyException {
+        KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType());
+        ks.load(new FileInputStream(KEYSTORE_FILE_NAME), KEYSTORE_PASS.toCharArray());
+
+        TrustManagerFactory tmf = TrustManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+        tmf.init(ks);
+
+        return tmf.getTrustManagers();
+    }
 
 }

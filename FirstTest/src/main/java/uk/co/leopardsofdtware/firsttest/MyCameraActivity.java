@@ -31,6 +31,7 @@ import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.Toast;
+import android.os.Build;
 
 import org.apache.commons.net.ftp.*;
 
@@ -188,12 +189,22 @@ public class MyCameraActivity extends Activity {
   private void getImage() {
     PictureCallback picture = new PictureCallback() {
       public void onPictureTaken(byte[] data, Camera cam) {
-        new SaveImageTask().execute(data);
+          Log.d(TAG, "onPictureTaken has been called");
+
+          if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB)
+              new SaveImageTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, data);
+          else
+              new SaveImageTask().execute(data);
+
+//        new SaveImageTask().execute(data);
+          Log.d(TAG, "return from SaveImageTask");
         camera.startPreview();
+          Log.d(TAG, "preview restarted");
       }
     };
+    Log.e(TAG,"Calling TakePicture");
     camera.takePicture(null, null, picture);
-    
+     Log.e(TAG,"Returned from  TakePicture");
   }
 
   private File getOutputMediaFile(int type) {
@@ -205,6 +216,9 @@ public class MyCameraActivity extends Activity {
         Log.e(TAG, "Failed to create storage directory.");
         return null;
       }
+      Log.e(TAG,"Made directory");
+    } else {
+        Log.e(TAG, "Directory exists, about to write file");
     }
     String timeStamp = new SimpleDateFormat("yyyMMdd_HHmmss")
                        .format(new Date());
@@ -384,17 +398,22 @@ public class MyCameraActivity extends Activity {
                 File directory = new File(Environment.getExternalStoragePublicDirectory(
                         Environment.DIRECTORY_PICTURES), getPackageName());
                 //creates this directory if its not there??
+                directory.mkdirs();
                 File sd = new File(directory.getAbsolutePath());
                 Log.e(TAG, "Source Directory is " + sd.toString() );
 
+                int numfiles =0;
                 File[] sdDirList = sd.listFiles();
-                Log.e(TAG, "There are " + sdDirList.length + " files in  " + sd.toString() );
-
-                if (sdDirList.length > 0 ) {
+                if (sdDirList != null) {
+                    Log.e(TAG, "There are " + sdDirList.length + " files in  " + sd.toString());
+                    numfiles = sdDirList.length;
+                }
+                if (numfiles > 0 ) {
 
                     mFTPClient = new MyFTPClient();
                       // connecting to the host
-                      status = mFTPClient.ftpConnect("ftp.drage.me.uk", "drageuk", "april96",21);
+// Secure                      status = mFTPClient.ftpConnect("ftp.drage.me.uk", "drageuk", "april96",21);
+                    status = mFTPClient.ftpConnect("www.compli-staging.depoel.local", "pdrage", "Dr@g3-2014",22);
                       // now check the reply code, if positive mean connection success
                       Log.e(TAG, "FTPconnect has status of " + status);
                       if (status) {
@@ -434,7 +453,9 @@ public class MyCameraActivity extends Activity {
                 } // end if files to transmit
                 Log.e(TAG, "Sleep");
 
-                Thread.sleep(100000); // 100 seconds
+                Thread.sleep(10000); //  5 or 100 seconds
+    //            Thread.sleep(100000); //  5 or 100 seconds
+                Log.e(TAG, "Change Sleep period to 100 seconds. Set to 10 seconds for testing");
               } //. end of loop
           catch (Exception e){
             e.printStackTrace();
@@ -454,24 +475,25 @@ public class MyCameraActivity extends Activity {
   class SaveImageTask extends AsyncTask<byte[], String, String> {
     @Override
     protected String doInBackground(byte[]... data) {
-    File picFile = getOutputMediaFile(MEDIA_TYPE_IMAGE);
-    if (picFile == null) {
-      Log.e(TAG, "Error creating media file; are storage permissions correct?");
-      return null;
-    }
-    try {
-      FileOutputStream fos = new FileOutputStream(picFile);
-      fos.write(data[0]);
-      fos.close();
-    } catch (FileNotFoundException e) {
-      Log.e(TAG, "File not found: " + e.getMessage());
-      e.getStackTrace();
-    } catch (IOException e) {
-      Log.e(TAG, "I/O error with file: " + e.getMessage());
-      e.getStackTrace();
-    }
-    
-    return null;
+        File picFile = getOutputMediaFile(MEDIA_TYPE_IMAGE);
+        if (picFile == null) {
+        Log.e(TAG, "Error creating media file; are storage permissions correct?");
+        return null;
+        }
+        try {
+        Log.d(TAG,"started SaveImageTask");
+        FileOutputStream fos = new FileOutputStream(picFile);
+         fos.write(data[0]);
+         fos.close();
+        } catch (FileNotFoundException e) {
+         Log.e(TAG, "File not found: " + e.getMessage());
+          e.getStackTrace();
+        } catch (IOException e) {
+         Log.e(TAG, "I/O error with file: " + e.getMessage());
+         e.getStackTrace();
+        }
+        Log.d(TAG, "File written");
+        return null;
      }
   }
 }
