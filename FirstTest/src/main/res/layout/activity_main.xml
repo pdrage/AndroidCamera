@@ -29,14 +29,23 @@
 
     </FrameLayout>
 
+
+
     <EditText
         android:layout_height="50dp"
         android:layout_width="wrap_content"
-        android:text="CWU000000"
+        android:text="000000"
         android:id="@+id/CWU_id"
         android:inputType="phone"
-        android:layout_gravity="left|top" />
-
+        android:layout_gravity="left|top"
+        android:paddingLeft="70px"/>
+    <TextView
+        android:layout_height="50dp"
+        android:layout_width="wrap_content"
+        android:text="CWU"
+        android:id="@+id/CWU_label"
+        android:layout_gravity="left|top"
+        android:paddingTop="30px"/>
     <Spinner
         android:id="@+id/docType_spinner"
         android:layout_height="50dp"

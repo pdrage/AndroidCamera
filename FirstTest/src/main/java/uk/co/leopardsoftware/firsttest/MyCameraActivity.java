@@ -9,6 +9,10 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.text.ParseException;
+
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
@@ -30,6 +34,7 @@ import android.view.Surface;
 import android.view.View;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
@@ -212,6 +217,45 @@ public class MyCameraActivity extends Activity {
     String timeStamp = new SimpleDateFormat("yyyMMdd_HHmmss")
                        .format(new Date());
     File file;
+    Log.e(TAG, "Parsing data to create filename");
+      // Filename format :
+      //
+      /*
+ *  File name formats :
+ *  CWUnnnnnnn-xx-mm-ii-YYYYMMDD_bbbbbb.jpg
+ * or maybe...
+ *  YYYYMMDD-CWUnnnnnnn-xx-mm-bbbbbb-ii-.jpg
+ *
+ *   where
+ *           xx is the id of the tablet that captured the image.
+ *       nnnnnn is the internal CWU reference for the candidate.
+ *           mm is the CWU id of the document type.
+ *            i is zero (00) if this is a single document or 01-99 if this is part of a sequence.
+ *     YYYYMMDD is the date of the file (from the App).
+ *       bbbbbb is the sequential number assigned to the image by the App.
+ */
+    String filename = "";
+    EditText mEdit   = (EditText)findViewById(R.id.CWU_id);
+    String CWU_id = mEdit.getText().toString();
+    String myDate;
+    String fileDate = "YYYYMMDD";
+    try {
+          Date now = new Date();
+          String dateString = now.toString();
+          SimpleDateFormat format =
+                  new SimpleDateFormat("yyyyMMdd");
+      //    Date parsed = format.parse(dateString);
+          fileDate = format.format(now);
+    } catch (Exception e){
+            e.printStackTrace();
+            Log.e(TAG, "Failed to format date");
+
+    }
+
+    filename = fileDate + "-CWU" + CWU_id + "-";
+
+    Log.e(TAG, "Filename = " + filename);
+
     if (type == MEDIA_TYPE_IMAGE) {
       file = new File(directory.getPath() + File.separator + "IMG_" 
                     + timeStamp + ".jpg");
