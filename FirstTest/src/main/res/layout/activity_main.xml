@@ -49,9 +49,10 @@
     <Spinner
         android:id="@+id/docType_spinner"
         android:layout_height="50dp"
-        android:layout_width="400px"
+        android:layout_width="400dp"
         android:text="Document Type"
-        android:layout_gravity="right|top" />
+        android:layout_gravity="right|top"
+        android:layout_weight="1" />
 
     <ImageView
         android:id="@+id/settings"

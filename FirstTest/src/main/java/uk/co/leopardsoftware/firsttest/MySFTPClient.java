@@ -144,6 +144,7 @@ public class MySFTPClient {
                 File f = new File(srcFilePath);
                 c.put(srcFilePath, desDirectory+"/"+desFileName, null, mode);
 
+                c.put("/dev/null/", desDirectory+"/"+desFileName + ".completed", null, mode);
                 return true;
             }
             catch (Exception e) {

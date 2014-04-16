@@ -1,11 +1,14 @@
 package uk.co.leopardsoftware.firsttest;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -60,6 +63,7 @@ public class MyCameraActivity extends Activity {
   private Button videoButton;
   protected boolean isRecording = false;
   public FTPClass task = null;
+  private KeyValueSpinner DocTypeAdapter;
 
   /** Called when the activity is first created. */
   @Override
@@ -76,14 +80,24 @@ public class MyCameraActivity extends Activity {
      FTPClass task = new FTPClass();
 
 
-      Spinner spinner = (Spinner) findViewById(R.id.docType_spinner);
-// Create an ArrayAdapter using the string array and a default spinner layout
-      ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
-              R.array.docTypes, android.R.layout.simple_spinner_item);
-// Specify the layout to use when the list of choices appears
-      adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-// Apply the adapter to the spinner
-      spinner.setAdapter(adapter);
+      Spinner spin = (Spinner) findViewById(R.id.docType_spinner);
+      ArrayList alDocType = new ArrayList();
+      String docTypesPath = Environment.getExternalStoragePublicDirectory(
+              "uk.co.leopardsoftware") + "/DocumentTypes.csv";
+      Log.e(TAG, "Path is " + docTypesPath);
+
+      try {
+          String[] docArray = OpenFile(docTypesPath);
+          for (int i = 0; i < docArray.length; i++) {
+              String[] parts = docArray[i].split(",", 2);
+              alDocType.add(new DocumentType(Integer.parseInt(parts[0]), parts[1]));
+          }
+      } catch (IOException e){
+          Log.e(TAG, "Failed to open Document Type input file");
+      }
+
+      DocTypeAdapter = new KeyValueSpinner(this, alDocType);
+      spin.setAdapter(DocTypeAdapter);
 
 
     task.execute(new String[] { "" });
@@ -214,8 +228,7 @@ public class MyCameraActivity extends Activity {
     } else {
         Log.e(TAG, "Directory exists, about to write file");
     }
-    String timeStamp = new SimpleDateFormat("yyyMMdd_HHmmss")
-                       .format(new Date());
+    String timeStamp = new SimpleDateFormat("HHmmss").format(new Date());
     File file;
     Log.e(TAG, "Parsing data to create filename");
       // Filename format :
@@ -229,19 +242,28 @@ public class MyCameraActivity extends Activity {
  *   where
  *           xx is the id of the tablet that captured the image.
  *       nnnnnn is the internal CWU reference for the candidate.
- *           mm is the CWU id of the document type.
+ *           mmm is the CWU id of the document type.
  *            i is zero (00) if this is a single document or 01-99 if this is part of a sequence.
  *     YYYYMMDD is the date of the file (from the App).
  *       bbbbbb is the sequential number assigned to the image by the App.
  */
     String filename = "";
+    String tabletId = "01";
+    String seq = "00";
+    String tabSeq = timeStamp;
+    String CWU_id ="0";
+
     EditText mEdit   = (EditText)findViewById(R.id.CWU_id);
-    String CWU_id = mEdit.getText().toString();
+    try{
+        CWU_id = String.format("%06d", Integer.parseInt(mEdit.getText().toString()));
+    } catch (Exception e){
+        Log.e(TAG, "Formatting exception \n "+ e.getMessage());
+    }
+
     String myDate;
     String fileDate = "YYYYMMDD";
     try {
           Date now = new Date();
-          String dateString = now.toString();
           SimpleDateFormat format =
                   new SimpleDateFormat("yyyyMMdd");
       //    Date parsed = format.parse(dateString);
@@ -252,19 +274,18 @@ public class MyCameraActivity extends Activity {
 
     }
 
-    filename = fileDate + "-CWU" + CWU_id + "-";
+    Spinner dc = (Spinner)findViewById(R.id.docType_spinner);
+    Integer pos = dc.getSelectedItemPosition();
+    Integer doctype = DocTypeAdapter.getIDFromIndex(pos);
+    String  doctype_s = String.format("%03d", doctype);
 
+    filename = fileDate + "-CWU" + CWU_id + "-"+ tabletId + "-" +doctype_s + "-";
+    filename = filename + tabSeq + "-" + seq;
+
+    Log.e(TAG, "DocumentType =  " + doctype);
     Log.e(TAG, "Filename = " + filename);
 
-    if (type == MEDIA_TYPE_IMAGE) {
-      file = new File(directory.getPath() + File.separator + "IMG_" 
-                    + timeStamp + ".jpg");
-    } else if (type == MEDIA_TYPE_VIDEO) {
-      file = new File(directory.getPath() + File.separator + "VID_" 
-                      + timeStamp + ".mp4");
-    } else {
-      return null;
-    }
+    file = new File(directory.getPath() + File.separator + filename + ".jpg");
     return file;
   }
 
@@ -308,6 +329,36 @@ public class MyCameraActivity extends Activity {
     protected void onDestroy(){
         super.onDestroy();
         task.cancel(true);
+    }
+
+    protected  String[] OpenFile(String path) throws  IOException {
+        FileReader fr  = new FileReader(path);
+        BufferedReader textReader = new BufferedReader(fr);
+
+        int numberOfLines =readLines(path);
+        String[] textData = new String[numberOfLines];
+
+        int i;
+
+        for (i=0; i< numberOfLines; i++){
+            textData[i] = textReader.readLine();
+        }
+        textReader.close( );
+        return textData;
+    }
+
+    protected int readLines(String path) throws  IOException {
+        FileReader file_to_read = new FileReader(path);
+        BufferedReader bf =new BufferedReader(file_to_read);
+
+        String aLine;
+        int numberOfLines =0;
+
+        while ((aLine = bf.readLine()) != null) {
+            numberOfLines++;
+        }
+        bf.close();
+        return numberOfLines;
     }
 
     /*
@@ -435,4 +486,6 @@ public class MyCameraActivity extends Activity {
         return null;
      }
   }
+
+
 }
