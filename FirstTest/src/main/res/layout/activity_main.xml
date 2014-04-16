@@ -16,14 +16,7 @@
         android:orientation="vertical"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
-        android:paddingTop = "150px" >
-
-        <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-            android:orientation="horizontal"
-            android:layout_width="match_parent"
-            android:layout_height="fill_parent">
-
-        </LinearLayout>
+        android:paddingTop = "75dp" >
     </LinearLayout>
 
 
@@ -38,25 +31,25 @@
         android:id="@+id/CWU_id"
         android:inputType="phone"
         android:layout_gravity="left|top"
-        android:paddingLeft="70px"/>
+        android:paddingLeft="35dp"/>
     <TextView
         android:layout_height="50dp"
         android:layout_width="wrap_content"
         android:text="CWU"
         android:id="@+id/CWU_label"
         android:layout_gravity="left|top"
-        android:paddingTop="30px"/>
+        android:paddingTop="15dp"/>
     <Spinner
         android:id="@+id/docType_spinner"
         android:layout_height="50dp"
         android:layout_width="400dp"
         android:text="Document Type"
-        android:layout_gravity="right|top"
-        android:layout_weight="1" />
+        android:layout_gravity="right|top" />
 
     <ImageView
         android:id="@+id/settings"
         android:src="@drawable/ic_action_settings"
+        android:contentDescription="Settings"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="left|center_vertical" />
@@ -64,6 +57,7 @@
     <ImageView
         android:id="@+id/zoom"
         android:src="@drawable/ic_action_search"
+        android:contentDescription="Zoom"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="right|center_vertical" />
@@ -71,6 +65,7 @@
     <ImageView
         android:id="@+id/cancel"
         android:src="@drawable/ic_navigation_cancel"
+        android:contentDescription="Cancel"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="left|bottom" />
@@ -78,6 +73,7 @@
     <ImageView
         android:id="@+id/accept"
         android:src="@drawable/ic_navigation_accept"
+        android:contentDescription="Accept"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="right|bottom" />
@@ -85,6 +81,7 @@
     <ImageView
         android:id="@+id/capture"
         android:src="@drawable/ic_content_save"
+        android:contentDescription="Capture"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal|bottom" />

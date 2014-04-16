@@ -151,8 +151,7 @@ public class MyFTPClient {
         public String ftpGetCurrentWorkingDirectory()
         {
             try {
-                String workingDir = mFTPClient.printWorkingDirectory();
-                return workingDir;
+                return  mFTPClient.printWorkingDirectory();
             } catch(Exception e) {
                 Log.d(TAG, "Error: could not get current working directory.");
             }
@@ -202,8 +201,7 @@ public class MyFTPClient {
         public boolean ftpMakeDirectory(String new_dir_path)
         {
             try {
-                boolean status = mFTPClient.makeDirectory(new_dir_path);
-                return status;
+                return mFTPClient.makeDirectory(new_dir_path);
             } catch(Exception e) {
                 Log.d(TAG, "Error: could not create new directory named " + new_dir_path);
             }
@@ -216,8 +214,7 @@ public class MyFTPClient {
         public boolean ftpRemoveDirectory(String dir_path)
         {
             try {
-                boolean status = mFTPClient.removeDirectory(dir_path);
-                return status;
+                return mFTPClient.removeDirectory(dir_path);
             } catch(Exception e) {
                 Log.d(TAG, "Error: could not remove directory named " + dir_path);
             }
@@ -230,8 +227,7 @@ public class MyFTPClient {
         public boolean ftpRemoveFile(String filePath)
         {
             try {
-                boolean status = mFTPClient.deleteFile(filePath);
-                return status;
+                return mFTPClient.deleteFile(filePath);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -244,8 +240,7 @@ public class MyFTPClient {
         public boolean ftpRenameFile(String from, String to)
         {
             try {
-                boolean status = mFTPClient.rename(from, to);
-                return status;
+                return mFTPClient.rename(from, to);
             } catch (Exception e) {
                 Log.d(TAG, "Could not rename file: " + from + " to: " + to);
             }
@@ -264,7 +259,7 @@ public class MyFTPClient {
         {
             boolean status = false;
             try {
-                FileOutputStream desFileStream = new FileOutputStream(desFilePath);;
+                FileOutputStream desFileStream = new FileOutputStream(desFilePath);
                 status = mFTPClient.retrieveFile(srcFilePath, desFileStream);
                 desFileStream.close();
 

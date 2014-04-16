@@ -12,7 +12,6 @@ import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.WindowManager;
-import android.os.Build;
 
 public class CameraPreview extends SurfaceView 
                            implements SurfaceHolder.Callback {
@@ -23,10 +22,9 @@ public class CameraPreview extends SurfaceView
   
   public CameraPreview(Context context, Camera cm) {
     super(context);
-      Log.e(TAG, "Starting Preview");
+    Log.e(TAG, "Starting Preview");
     camera = cm;
-      Log.e(TAG, "camera passed in from call - called camera");
-      // orientation fix
+    Log.e(TAG, "camera passed in from call - called camera");
     //    // orientation fix
     sh = getHolder();
     sh.addCallback(this);
@@ -39,7 +37,6 @@ public class CameraPreview extends SurfaceView
     public void surfaceCreated(SurfaceHolder holder)
     {
         try {
-//        camera = Camera.open();
 
             Parameters params = camera.getParameters();
             if (this.getResources().getConfiguration().orientation != Configuration.ORIENTATION_LANDSCAPE)
@@ -50,10 +47,7 @@ public class CameraPreview extends SurfaceView
                 camera.setParameters(params);
             } else {
                 Log.d(TAG, "options NOT being set");
-
             }
-
-
             camera.setPreviewDisplay(holder);
         }
         catch (IOException exception)
@@ -61,33 +55,10 @@ public class CameraPreview extends SurfaceView
             camera.release();
             camera = null;
         }
-//
-//        try {
-//            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.FROYO)
-//            {
-//                Log.d(TAG, "option 1");
-//                camera.setDisplayOrientation(90);
-//            } else {
-//                Log.d(TAG, "option 2");
-//
-//                parameters.setRotation(90);
-//                camera.setParameters(parameters);
-//            }
-//
-//            camera.setPreviewDisplay(holder);
-//        } catch (IOException exception) {
-//            camera.release();
-//        }
-//
-//        camera.startPreview();
-//    } catch (Exception e) {
-//          Log.e(TAG, "Error setting up preview: " + e.getMessage());
-//          e.getStackTrace();
-//    }
   }
 
-  public void surfaceChanged(SurfaceHolder holder, int format, int width,
-      int height) {
+  public void surfaceChanged(SurfaceHolder holder, int format, int width, int height)
+  {
     if (sh.getSurface() == null) {
       // no preview surface!
       return;
@@ -95,38 +66,44 @@ public class CameraPreview extends SurfaceView
     
     // Stop preview before changing.
 
-        if (isPreviewRunning) {
-            camera.stopPreview();
-        }
+    if (isPreviewRunning) {
+        camera.stopPreview();
+    }
 
-        Parameters parameters = camera.getParameters();
-        Display display = ((WindowManager) getContext().getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay();
+    Parameters parameters = camera.getParameters();
+    Display display = ((WindowManager) getContext().getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay();
 
-        if (display.getRotation() == Surface.ROTATION_0) {
-            parameters.setPreviewSize(height, width);
-            camera.setDisplayOrientation(90);
-        }
+    if (display.getRotation() == Surface.ROTATION_0) {
+        parameters.setPreviewSize(height, width);
+        camera.setDisplayOrientation(90);
+    }
 
-        if (display.getRotation() == Surface.ROTATION_90) {
-            parameters.setPreviewSize(width, height);
-        }
+    if (display.getRotation() == Surface.ROTATION_90) {
+        parameters.setPreviewSize(width, height);
+    }
 
-        if (display.getRotation() == Surface.ROTATION_180) {
-            parameters.setPreviewSize(height, width);
-        }
+    if (display.getRotation() == Surface.ROTATION_180) {
+        parameters.setPreviewSize(height, width);
+    }
 
-        if (display.getRotation() == Surface.ROTATION_270) {
-            parameters.setPreviewSize(width, height);
-            camera.setDisplayOrientation(180);
-        }
+    if (display.getRotation() == Surface.ROTATION_270) {
+        parameters.setPreviewSize(width, height);
+        camera.setDisplayOrientation(180);
+    }
 
-        camera.setParameters(parameters);
-        camera.startPreview();
+    camera.setParameters(parameters);
+    camera.startPreview();
 
   }
 
   public void surfaceDestroyed(SurfaceHolder holder) {
-    // Activity looks after releasing camera preview
+      // Activity looks after releasing camera preview
+      // Surface will be destroyed when we return, so stop the preview.
+      if (camera != null) {
+          // Call stopPreview() to stop updating the preview surface.
+          camera.stopPreview();
+      }
+
   }
 
 }

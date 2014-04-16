@@ -4,7 +4,6 @@ import android.content.Context;
 import android.util.Log;
 
 import com.jcraft.jsch.*;
-import java.io.File;
 
 /**
  * Created by pdrage on 14/04/2014.
@@ -44,7 +43,7 @@ public class MySFTPClient {
 
             }
             catch(Exception e){
-                System.out.println(e);
+                Log.e(TAG, "Problem with SFTP Driver: " + e.getMessage());
                 return false;
             }
             return true;
@@ -56,6 +55,7 @@ public class MySFTPClient {
         {
             try {
                 session.disconnect();
+                return true;
             } catch (Exception e) {
                 Log.i(TAG, "Error occurred while disconnecting from ftp server.");
             }
@@ -81,7 +81,6 @@ public class MySFTPClient {
 
         public void ftpPrintFilesList(String dir_path)
         {
-             return ;
         }
 
         //Method to create new directory:
@@ -121,8 +120,7 @@ public class MySFTPClient {
          */
         public boolean ftpDownload(String srcFilePath, String desFilePath)
         {
-           boolean status = false;
-           return status;
+           return  false;
         }
 
         //Method to upload a file to FTP server:
@@ -136,12 +134,10 @@ public class MySFTPClient {
         public boolean ftpUpload(String srcFilePath, String desFileName,
                                  String desDirectory, Context context)
         {
-            boolean status = false;
             try {
                 int mode=ChannelSftp.OVERWRITE;
 
                 Log.e(TAG, "Attempting upload of  " + srcFilePath + " into " +  desDirectory+"/"+desFileName);
-                File f = new File(srcFilePath);
                 c.put(srcFilePath, desDirectory+"/"+desFileName, null, mode);
 
                 c.put("/dev/null/", desDirectory+"/"+desFileName + ".completed", null, mode);

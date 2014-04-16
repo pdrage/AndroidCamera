@@ -3,46 +3,30 @@ package uk.co.leopardsoftware.firsttest;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
-
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.text.ParseException;
 
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.hardware.Camera;
 import android.hardware.Camera.PictureCallback;
-import android.media.CamcorderProfile;
 import android.media.MediaRecorder;
-import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
-import android.provider.MediaStore;
 import android.util.Log;
 import android.view.Surface;
 import android.view.View;
-import android.view.ViewGroup.LayoutParams;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
-import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.FrameLayout;
-import android.widget.LinearLayout;
 import android.widget.Toast;
 
 //import org.apache.commons.net.ftp.*;
@@ -52,16 +36,12 @@ public class MyCameraActivity extends Activity {
   
   // Use constants above API 11 (MediaStore.Files.FileColumns)
   protected static final int MEDIA_TYPE_IMAGE = 0;
-  protected static final int MEDIA_TYPE_VIDEO = 1;
   private static final int CAPTURE_IMAGE_ACTIVITY_REQ = 100;
   private static final String TAG = "MCAct";
 
-  private Uri fileUri;
   private Camera camera;
   private CameraPreview preview;
   private MediaRecorder mr;
-  private Button videoButton;
-  protected boolean isRecording = false;
   public FTPClass task = null;
   private KeyValueSpinner DocTypeAdapter;
 
@@ -70,7 +50,7 @@ public class MyCameraActivity extends Activity {
   public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     if (!checkCameraExists(this)) {
-      Toast.makeText(this, "Sorry: you have no camera!", Toast.LENGTH_LONG);
+      Toast.makeText(this, "Sorry: you have no camera!", Toast.LENGTH_LONG).show();
       finish();
     }
     camera = getCameraInstance();
@@ -145,10 +125,8 @@ public class MyCameraActivity extends Activity {
           Toast.makeText(this, "Image saved successfully in: " 
                          + data.getData(), Toast.LENGTH_LONG).show();
         }
-      } else if (resultCode == RESULT_CANCELED) {
-        // User cancelled the operation; do nothing
-      } else {
-        Toast.makeText(this, "Callout for image capture failed!", 
+      } else if (!resultCode == RESULT_CANCELED) {
+            Toast.makeText(this, "Callout for image capture failed!",
                        Toast.LENGTH_LONG).show();
       }
     }
@@ -168,11 +146,6 @@ public class MyCameraActivity extends Activity {
     super.onResume();
   }
 
-  protected Uri getOutputMediaFileUri(int type) {
-    return Uri.fromFile(getOutputMediaFile(type));
-  }
-
-
   private boolean checkCameraExists(Context c) {
     if (c.getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA)) {
       return true;
@@ -188,7 +161,7 @@ public class MyCameraActivity extends Activity {
     } catch (Exception e) {
       Log.e(TAG, "No camera: exception " + e.getMessage());
       e.getStackTrace();
-      Toast.makeText(this, "Sorry: I can't get a camera!", Toast.LENGTH_LONG);
+      Toast.makeText(this, "Sorry: I can't get a camera!", Toast.LENGTH_LONG).show();
       finish();
     }
     return c;
@@ -197,22 +170,23 @@ public class MyCameraActivity extends Activity {
   private void getImage() {
     PictureCallback picture = new PictureCallback() {
       public void onPictureTaken(byte[] data, Camera cam) {
-          Log.d(TAG, "onPictureTaken has been called");
+        Log.d(TAG, "onPictureTaken has been called");
 
-          if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB)
-              new SaveImageTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, data);
-          else
-              new SaveImageTask().execute(data);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB)
+            new SaveImageTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, data);
+        else
+            new SaveImageTask().execute(data);
 
-//        new SaveImageTask().execute(data);
-          Log.d(TAG, "return from SaveImageTask");
+//      new SaveImageTask().execute(data);
+        Log.d(TAG, "return from SaveImageTask");
         camera.startPreview();
-          Log.d(TAG, "preview restarted");
+        Log.d(TAG, "preview restarted");
       }
     };
+
     Log.e(TAG,"Calling TakePicture");
     camera.takePicture(null, null, picture);
-     Log.e(TAG,"Returned from  TakePicture");
+    Log.e(TAG,"Returned from  TakePicture");
   }
 
   private File getOutputMediaFile(int type) {
@@ -247,10 +221,9 @@ public class MyCameraActivity extends Activity {
  *     YYYYMMDD is the date of the file (from the App).
  *       bbbbbb is the sequential number assigned to the image by the App.
  */
-    String filename = "";
+    String filename;
     String tabletId = "01";
     String seq = "00";
-    String tabSeq = timeStamp;
     String CWU_id ="0";
 
     EditText mEdit   = (EditText)findViewById(R.id.CWU_id);
@@ -260,7 +233,6 @@ public class MyCameraActivity extends Activity {
         Log.e(TAG, "Formatting exception \n "+ e.getMessage());
     }
 
-    String myDate;
     String fileDate = "YYYYMMDD";
     try {
           Date now = new Date();
@@ -280,7 +252,7 @@ public class MyCameraActivity extends Activity {
     String  doctype_s = String.format("%03d", doctype);
 
     filename = fileDate + "-CWU" + CWU_id + "-"+ tabletId + "-" +doctype_s + "-";
-    filename = filename + tabSeq + "-" + seq;
+    filename = filename + timeStamp + "-" + seq;
 
     Log.e(TAG, "DocumentType =  " + doctype);
     Log.e(TAG, "Filename = " + filename);
@@ -351,10 +323,9 @@ public class MyCameraActivity extends Activity {
         FileReader file_to_read = new FileReader(path);
         BufferedReader bf =new BufferedReader(file_to_read);
 
-        String aLine;
         int numberOfLines =0;
 
-        while ((aLine = bf.readLine()) != null) {
+        while ((bf.readLine()) != null) {
             numberOfLines++;
         }
         bf.close();
@@ -385,8 +356,8 @@ public class MyCameraActivity extends Activity {
 
     /* Connect to an FTP server */
 
-                  MySFTPClient mFTPClient = null;
-                  boolean status = false;
+                  MySFTPClient mFTPClient;
+                  boolean status;
 
                 File directory = new File(Environment.getExternalStoragePublicDirectory(
                         Environment.DIRECTORY_PICTURES), getPackageName());
@@ -417,7 +388,7 @@ public class MyCameraActivity extends Activity {
 
                   /* now send a file */
                           String desDirectory = "public_html/CWU";
-                          status = mFTPClient.ftpChangeDirectory(desDirectory);
+                          mFTPClient.ftpChangeDirectory(desDirectory);
 
                       //gets a list of the files
                           try{
