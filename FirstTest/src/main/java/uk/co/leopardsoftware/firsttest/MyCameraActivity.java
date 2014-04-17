@@ -8,7 +8,9 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.text.SimpleDateFormat;
 
+import android.app.ActionBar;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -44,6 +46,7 @@ public class MyCameraActivity extends Activity {
   private MediaRecorder mr;
   public FTPClass task = null;
   private KeyValueSpinner DocTypeAdapter;
+  private String state = "IDLE";
 
   /** Called when the activity is first created. */
   @Override
@@ -78,6 +81,18 @@ public class MyCameraActivity extends Activity {
 
       DocTypeAdapter = new KeyValueSpinner(this, alDocType);
       spin.setAdapter(DocTypeAdapter);
+      EditText CWUbox = (EditText)findViewById(R.id.CWU_id);
+      CWUbox.setSelection(CWUbox.getText().length());
+
+// hide the status and navigation bars ..
+      View decorView = getWindow().getDecorView();
+// Hide the status bar.
+      int uiOptions = View.SYSTEM_UI_FLAG_FULLSCREEN;
+      decorView.setSystemUiVisibility(uiOptions);
+// Remember that you should never show the action bar if the
+// status bar is hidden, so hide that too if necessary.
+      ActionBar actionBar = getActionBar();
+      actionBar.hide();
 
 
     task.execute(new String[] { "" });
@@ -125,7 +140,7 @@ public class MyCameraActivity extends Activity {
           Toast.makeText(this, "Image saved successfully in: " 
                          + data.getData(), Toast.LENGTH_LONG).show();
         }
-      } else if (!resultCode == RESULT_CANCELED) {
+      } else if (!(resultCode == RESULT_CANCELED)) {
             Toast.makeText(this, "Callout for image capture failed!",
                        Toast.LENGTH_LONG).show();
       }
@@ -143,6 +158,15 @@ public class MyCameraActivity extends Activity {
       camera = getCameraInstance();
       setUpLayout();
     }
+    // hide the status and navigation bars ..
+    View decorView = getWindow().getDecorView();
+    // Hide the status bar.
+    int uiOptions = View.SYSTEM_UI_FLAG_FULLSCREEN;
+    decorView.setSystemUiVisibility(uiOptions);
+    // Remember that you should never show the action bar if the
+    // status bar is hidden, so hide that too if necessary.
+    ActionBar actionBar = getActionBar();
+    actionBar.hide();
     super.onResume();
   }
 
@@ -179,7 +203,8 @@ public class MyCameraActivity extends Activity {
 
 //      new SaveImageTask().execute(data);
         Log.d(TAG, "return from SaveImageTask");
-        camera.startPreview();
+// - wait until accepted or rejected..
+//        camera.startPreview();
         Log.d(TAG, "preview restarted");
       }
     };
@@ -205,9 +230,8 @@ public class MyCameraActivity extends Activity {
     String timeStamp = new SimpleDateFormat("HHmmss").format(new Date());
     File file;
     Log.e(TAG, "Parsing data to create filename");
-      // Filename format :
-      //
-      /*
+
+ /*
  *  File name formats :
  *  CWUnnnnnnn-xx-mm-ii-YYYYMMDD_bbbbbb.jpg
  * or maybe...
@@ -289,13 +313,48 @@ public class MyCameraActivity extends Activity {
     ImageView captureButton = (ImageView) findViewById(R.id.capture);
     captureButton.setOnClickListener(
        new View.OnClickListener() {
-       public void onClick(View v) {
-        getImage();
-      }
+        public void onClick(View v) {
+            getImage();
+            state = "HOLDING";
+        }
       }
     );
-  }
 
+      final Context myContext = this;
+    ImageView acceptButton = (ImageView) findViewById(R.id.accept);
+    acceptButton.setOnClickListener(
+            new View.OnClickListener() {
+                public void onClick(View v) {
+                    Toast.makeText(myContext, "Click on accept", Toast.LENGTH_LONG).show();
+                    state="IDLE";
+                    camera.startPreview();
+                }
+           }
+    );
+
+      ImageView cancelButton = (ImageView) findViewById(R.id.cancel);
+      cancelButton.setOnClickListener(
+              new View.OnClickListener() {
+                  public void onClick(View v) {
+                      Toast.makeText(myContext, "Click on cancel", Toast.LENGTH_LONG).show();
+                      state="IDLE";
+                      camera.startPreview();
+
+                  }
+              }
+      );
+
+      ImageView zoomButton = (ImageView) findViewById(R.id.zoom);
+      zoomButton.setOnClickListener(
+              new View.OnClickListener() {
+                  public void onClick(View v) {
+                      Toast.makeText(myContext, "Click on zoom", Toast.LENGTH_LONG).show();
+                  }
+              }
+      );
+
+
+  }
 
     @Override
     protected void onDestroy(){
@@ -324,7 +383,6 @@ public class MyCameraActivity extends Activity {
         BufferedReader bf =new BufferedReader(file_to_read);
 
         int numberOfLines =0;
-
         while ((bf.readLine()) != null) {
             numberOfLines++;
         }
@@ -333,7 +391,10 @@ public class MyCameraActivity extends Activity {
     }
 
     /*
-    **************************  FTP Code ************
+     *
+     **************************  FTP Code ************
+     *
+     *
      */
 
   private class FTPClass  extends AsyncTask<String, Void, String>{

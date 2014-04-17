@@ -27,7 +27,7 @@
     <EditText
         android:layout_height="50dp"
         android:layout_width="wrap_content"
-        android:text="000000"
+        android:text="0"
         android:id="@+id/CWU_id"
         android:inputType="phone"
         android:layout_gravity="left|top"
