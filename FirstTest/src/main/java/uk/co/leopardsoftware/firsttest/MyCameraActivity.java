@@ -25,11 +25,17 @@ import android.os.Environment;
 import android.util.Log;
 import android.view.Surface;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.ImageView;
 import android.widget.FrameLayout;
 import android.widget.Toast;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.media.ExifInterface;
+import android.graphics.Matrix;
+
 
 //import org.apache.commons.net.ftp.*;
 
@@ -47,6 +53,7 @@ public class MyCameraActivity extends Activity {
   public FTPClass task = null;
   private KeyValueSpinner DocTypeAdapter;
   private String state = "IDLE";
+
 
   /** Called when the activity is first created. */
   @Override
@@ -205,8 +212,7 @@ public class MyCameraActivity extends Activity {
         Log.d(TAG, "return from SaveImageTask");
 // - wait until accepted or rejected..
 //        camera.startPreview();
-        Log.d(TAG, "preview restarted");
-      }
+        }
     };
 
     Log.e(TAG,"Calling TakePicture");
@@ -217,15 +223,20 @@ public class MyCameraActivity extends Activity {
   private File getOutputMediaFile(int type) {
     // good location for shared pictures; will not be lost if app uninstalled
     File directory = new File(Environment.getExternalStoragePublicDirectory(
-      Environment.DIRECTORY_PICTURES), getPackageName());
+            Environment.DIRECTORY_PICTURES), getPackageName()+ "/ready");
+    if (!directory.exists()) {
+        if (!directory.mkdirs()) {
+            Log.e(TAG, "Failed to create storage(ready) directory.");
+            return null;
+        }
+    }
+    directory = new File(Environment.getExternalStoragePublicDirectory(
+      Environment.DIRECTORY_PICTURES), getPackageName()+ "/holding");
     if (!directory.exists()) {
       if (!directory.mkdirs()) {
-        Log.e(TAG, "Failed to create storage directory.");
+        Log.e(TAG, "Failed to create storage (holding) directory.");
         return null;
       }
-      Log.e(TAG,"Made directory");
-    } else {
-        Log.e(TAG, "Directory exists, about to write file");
     }
     String timeStamp = new SimpleDateFormat("HHmmss").format(new Date());
     File file;
@@ -304,51 +315,122 @@ public class MyCameraActivity extends Activity {
   }
 
   private void setUpLayout() {
+
+    final Context myContext = this;
+
+
+
     setContentView(R.layout.activity_main);
-      Log.e(TAG, "in SetupLayout");
+    Log.e(TAG, "in SetupLayout");
     preview = new CameraPreview(this, camera);
     FrameLayout frame = (FrameLayout) findViewById(R.id.camera_preview);
     frame.addView(preview);
 
-    ImageView captureButton = (ImageView) findViewById(R.id.capture);
+    final ImageView acceptButton = (ImageView) findViewById(R.id.accept);
+    final ImageView zoomButton = (ImageView) findViewById(R.id.zoom);
+    final ImageView cancelButton = (ImageView) findViewById(R.id.cancel);
+    final ImageView captureButton = (ImageView) findViewById(R.id.capture);
+    final ImageView zoomLayer = (ImageView) findViewById(R.id.camera_zoom);
+
+    state="IDLE";
+    acceptButton.setVisibility(View.INVISIBLE);
+    cancelButton.setVisibility(View.INVISIBLE);
+    zoomButton.setVisibility(View.INVISIBLE);
+    zoomLayer.setVisibility(View.INVISIBLE);
+    captureButton.setVisibility(View.VISIBLE);
+
+
+
+
     captureButton.setOnClickListener(
        new View.OnClickListener() {
         public void onClick(View v) {
             getImage();
             state = "HOLDING";
+            acceptButton.setVisibility(View.VISIBLE);
+            cancelButton.setVisibility(View.VISIBLE);
+            zoomButton.setVisibility(View.VISIBLE);
+            captureButton.setVisibility(View.INVISIBLE);
+            zoomLayer.setVisibility(View.INVISIBLE);
+
         }
       }
     );
 
-      final Context myContext = this;
-    ImageView acceptButton = (ImageView) findViewById(R.id.accept);
     acceptButton.setOnClickListener(
             new View.OnClickListener() {
                 public void onClick(View v) {
-                    Toast.makeText(myContext, "Click on accept", Toast.LENGTH_LONG).show();
+                    Toast.makeText(myContext, "Accepted", Toast.LENGTH_LONG).show();
                     state="IDLE";
                     camera.startPreview();
+                    acceptButton.setVisibility(View.INVISIBLE);
+                    cancelButton.setVisibility(View.INVISIBLE);
+                    zoomButton.setVisibility(View.INVISIBLE);
+                    zoomLayer.setVisibility(View.INVISIBLE);
+                    captureButton.setVisibility(View.VISIBLE);
+                    byte[] data = null;
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB)
+                        new SetFileReadyTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR,data);
+                    else
+                        new SetFileReadyTask().execute(data);
                 }
            }
     );
 
-      ImageView cancelButton = (ImageView) findViewById(R.id.cancel);
       cancelButton.setOnClickListener(
               new View.OnClickListener() {
                   public void onClick(View v) {
-                      Toast.makeText(myContext, "Click on cancel", Toast.LENGTH_LONG).show();
+                      Toast.makeText(myContext, "Cancelled!", Toast.LENGTH_LONG).show();
                       state="IDLE";
                       camera.startPreview();
+                      acceptButton.setVisibility(View.INVISIBLE);
+                      cancelButton.setVisibility(View.INVISIBLE);
+                      zoomButton.setVisibility(View.INVISIBLE);
+                      captureButton.setVisibility(View.VISIBLE);
+                      zoomLayer.setVisibility(View.INVISIBLE);
 
+                      byte[] data = null;
+                      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB)
+                          new RemoveFileTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR,data);
+                      else
+                          new RemoveFileTask().execute(data);
                   }
               }
       );
 
-      ImageView zoomButton = (ImageView) findViewById(R.id.zoom);
       zoomButton.setOnClickListener(
               new View.OnClickListener() {
                   public void onClick(View v) {
-                      Toast.makeText(myContext, "Click on zoom", Toast.LENGTH_LONG).show();
+                      if (state == "ZOOMED"){
+                          state = "HOLDING";
+                          zoomLayer.setVisibility(View.INVISIBLE);
+
+                      } else if (state == "HOLDING") {
+                          state = "ZOOMED";
+                          zoomLayer.setVisibility(View.VISIBLE);
+
+                          // get filename ..
+
+                          File directory = new File(Environment.getExternalStoragePublicDirectory(
+                                  Environment.DIRECTORY_PICTURES), getPackageName()+"/holding");
+                          File sd = new File(directory.getAbsolutePath());
+                          int numfiles =0;
+                          File[] sdDirList = sd.listFiles();
+                          if (sdDirList != null) {
+                              numfiles = sdDirList.length;
+                          }
+                          if (numfiles > 0 ) {
+                            String srcFilePath = sdDirList[0].toString();
+                            File imgFile = new File(srcFilePath);
+                            Bitmap myBitmap = BitmapFactory.decodeFile(imgFile.getAbsolutePath());
+                            Bitmap newBitmap = Bitmap.createBitmap(myBitmap, 640, 850, 640, 850, null, false);
+                            myBitmap = null;
+                            ImageView myImage = (ImageView) findViewById(R.id.camera_zoom);
+                            myImage.setImageBitmap(newBitmap);
+                            newBitmap = null;
+                          }
+                      }
+//                      Toast.makeText(myContext, "Click on zoom, state now " + state, Toast.LENGTH_LONG).show();
                   }
               }
       );
@@ -357,9 +439,28 @@ public class MyCameraActivity extends Activity {
   }
 
     @Override
-    protected void onDestroy(){
-        super.onDestroy();
-        task.cancel(true);
+    protected void onDestroy() {
+        try {
+            super.onDestroy();
+            task.cancel(true);
+        } catch (Exception e){
+            Log.e(TAG, "Error failing to Destroy or cancel task");
+        }
+
+        unbindDrawables(findViewById(R.id.RootView));
+        System.gc();
+    }
+
+    private void unbindDrawables(View view) {
+        if (view.getBackground() != null) {
+            view.getBackground().setCallback(null);
+        }
+        if (view instanceof ViewGroup) {
+            for (int i = 0; i < ((ViewGroup) view).getChildCount(); i++) {
+                unbindDrawables(((ViewGroup) view).getChildAt(i));
+            }
+            ((ViewGroup) view).removeAllViews();
+        }
     }
 
     protected  String[] OpenFile(String path) throws  IOException {
@@ -411,7 +512,7 @@ public class MyCameraActivity extends Activity {
 
         Log.e (TAG, "Urls = " + urls);
         while(running) {
-            try {
+      try {
     /* Loop forever */
 
 
@@ -421,7 +522,7 @@ public class MyCameraActivity extends Activity {
                   boolean status;
 
                 File directory = new File(Environment.getExternalStoragePublicDirectory(
-                        Environment.DIRECTORY_PICTURES), getPackageName());
+                        Environment.DIRECTORY_PICTURES), getPackageName()+"/ready");
                 //creates this directory if its not there??
                 directory.mkdirs();
                 File sd = new File(directory.getAbsolutePath());
@@ -507,6 +608,7 @@ public class MyCameraActivity extends Activity {
         FileOutputStream fos = new FileOutputStream(picFile);
          fos.write(data[0]);
          fos.close();
+            data = null;
         } catch (FileNotFoundException e) {
          Log.e(TAG, "File not found: " + e.getMessage());
           e.getStackTrace();
@@ -515,9 +617,86 @@ public class MyCameraActivity extends Activity {
          e.getStackTrace();
         }
         Log.d(TAG, "File written to store");
+
+        try {
+            Bitmap bm = BitmapFactory.decodeFile(picFile.getAbsolutePath());
+            ExifInterface exif = new ExifInterface(picFile.getAbsolutePath());
+            String orientString = exif.getAttribute(ExifInterface.TAG_ORIENTATION);
+            int orientation = orientString != null ? Integer.parseInt(orientString) : ExifInterface.ORIENTATION_NORMAL;
+            int rotationAngle = 90;
+            if (orientation == ExifInterface.ORIENTATION_ROTATE_90) rotationAngle = 180;
+            if (orientation == ExifInterface.ORIENTATION_ROTATE_180) rotationAngle = 270;
+            if (orientation == ExifInterface.ORIENTATION_ROTATE_270) rotationAngle = 0;
+Log.e(TAG, "Orientation is " + rotationAngle);
+            Matrix matrix = new Matrix();
+            matrix.setRotate(rotationAngle);
+            Bitmap rotatedBitmap = Bitmap.createBitmap(bm, 0, 0, bm.getWidth(), bm.getHeight(), matrix, true);
+
+            FileOutputStream fos = new FileOutputStream(picFile);
+            rotatedBitmap.compress(Bitmap.CompressFormat.JPEG, 90, fos);
+            bm = null;
+            rotatedBitmap = null;
+        }catch (FileNotFoundException e) {
+            Log.e(TAG, "File not found: " + e.getMessage());
+            e.getStackTrace();
+        } catch (IOException e) {
+            Log.e(TAG, "I/O error with file: " + e.getMessage());
+            e.getStackTrace();
+        }
+
         return null;
      }
   }
 
 
+  class SetFileReadyTask extends AsyncTask<byte[], String, String> {
+      @Override
+      protected String doInBackground(byte[]... data){
+
+          File directory = new File(Environment.getExternalStoragePublicDirectory(
+                  Environment.DIRECTORY_PICTURES), getPackageName()+"/holding");
+          File sd = new File(directory.getAbsolutePath());
+          int numfiles =0;
+          File[] sdDirList = sd.listFiles();
+          if (sdDirList != null) {
+              Log.d(TAG, "There are " + sdDirList.length + " files in  " + sd.toString());
+              numfiles = sdDirList.length;
+          }
+          if (numfiles > 0 ) {
+              for(int i=sdDirList.length-1;i>-1;i--) {
+                  String srcFilePath = sdDirList[i].toString();
+                  File src = new File(srcFilePath);
+                  String dstName = srcFilePath.substring(srcFilePath.lastIndexOf("/"));
+                  File dst = new File(Environment.getExternalStoragePublicDirectory(
+                          Environment.DIRECTORY_PICTURES), getPackageName() + "/ready" + dstName);
+                  src.renameTo(dst);
+              }
+          }
+          return null;
+      }
+  }
+
+    class RemoveFileTask extends AsyncTask<byte[], String, String> {
+        @Override
+        protected String doInBackground(byte[]... data){
+
+            File directory = new File(Environment.getExternalStoragePublicDirectory(
+                    Environment.DIRECTORY_PICTURES), getPackageName()+"/holding");
+            File sd = new File(directory.getAbsolutePath());
+            int numfiles =0;
+            File[] sdDirList = sd.listFiles();
+            if (sdDirList != null) {
+                Log.d(TAG, "There are " + sdDirList.length + " files in  " + sd.toString());
+                numfiles = sdDirList.length;
+            }
+            if (numfiles > 0 ) {
+                for(int i=sdDirList.length-1;i>-1;i--) {
+                    String srcFilePath = sdDirList[i].toString();
+                    File src = new File(srcFilePath);
+                    src.delete();
+                }
+            }
+            return null;
+        }
+    }
 }

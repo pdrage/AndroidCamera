@@ -101,7 +101,11 @@ public class CameraPreview extends SurfaceView
       // Surface will be destroyed when we return, so stop the preview.
       if (camera != null) {
           // Call stopPreview() to stop updating the preview surface.
-          camera.stopPreview();
+          try {
+              camera.stopPreview();
+          } catch (Exception e){
+              Log.w(TAG, "error thrown when attempting to stop Preview: " + e.getMessage());
+          }
       }
 
   }
