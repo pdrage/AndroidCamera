@@ -53,6 +53,7 @@ public class CameraPreview extends SurfaceView
         catch (IOException exception)
         {
             camera.release();
+            Log.w(TAG, "Camera released in surfaceCreated, exception =" + exception.getMessage());
             camera = null;
         }
   }
@@ -67,7 +68,11 @@ public class CameraPreview extends SurfaceView
     // Stop preview before changing.
 
     if (isPreviewRunning) {
-        camera.stopPreview();
+        try{
+            camera.stopPreview();
+        } catch (java.lang.RuntimeException e) {
+            Log.w(TAG, "Runtime - " + e.getMessage());
+        }
     }
 
     Parameters parameters = camera.getParameters();

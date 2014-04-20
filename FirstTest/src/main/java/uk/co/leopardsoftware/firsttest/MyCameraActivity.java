@@ -55,10 +55,28 @@ public class MyCameraActivity extends Activity {
   private String state = "IDLE";
 
 
+  public static class MyUncaughtExceptionHandler implements Thread.UncaughtExceptionHandler{
+      @Override
+      public void uncaughtException(Thread thread, Throwable ex) {
+          Log.e("Uncaught Exception", "Got an uncaught exception" + ex.toString());
+          if (ex.getClass().equals(OutOfMemoryError.class)) {
+              try {
+                  android.os.Debug.dumpHprofData(Environment.getExternalStoragePublicDirectory(
+                          "uk.co.leopardsoftware") + "/dump.hprof");
+              } catch (IOException e) {
+                  e.printStackTrace();
+              }
+          }
+          ex.printStackTrace();
+      }
+  }
+
   /** Called when the activity is first created. */
   @Override
   public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
+      Thread.currentThread().setUncaughtExceptionHandler(new MyUncaughtExceptionHandler());
+
     if (!checkCameraExists(this)) {
       Toast.makeText(this, "Sorry: you have no camera!", Toast.LENGTH_LONG).show();
       finish();
@@ -67,7 +85,7 @@ public class MyCameraActivity extends Activity {
       setCameraDisplayOrientation(this, 0, camera);
     setUpLayout();
 
-     FTPClass task = new FTPClass();
+
 
 
       Spinner spin = (Spinner) findViewById(R.id.docType_spinner);
@@ -102,7 +120,10 @@ public class MyCameraActivity extends Activity {
       actionBar.hide();
 
 
-    task.execute(new String[] { "" });
+      task = new FTPClass();
+      task.execute(new String[] { "" });
+
+      Log.e(TAG, "onCreate Activity has just run");
   }
 
     public static void setCameraDisplayOrientation(Activity activity,
@@ -270,11 +291,11 @@ public class MyCameraActivity extends Activity {
 
     String fileDate = "YYYYMMDD";
     try {
-          Date now = new Date();
-          SimpleDateFormat format =
-                  new SimpleDateFormat("yyyyMMdd");
-      //    Date parsed = format.parse(dateString);
-          fileDate = format.format(now);
+        Date now = new Date();
+        SimpleDateFormat format =
+            new SimpleDateFormat("yyyyMMdd");
+        fileDate = format.format(now);
+        now=null;
     } catch (Exception e){
             e.printStackTrace();
             Log.e(TAG, "Failed to format date");
@@ -283,6 +304,10 @@ public class MyCameraActivity extends Activity {
 
     Spinner dc = (Spinner)findViewById(R.id.docType_spinner);
     Integer pos = dc.getSelectedItemPosition();
+      if (pos <0) {
+          Log.e(TAG,"Index to spinner set to " + pos + ". Reset to 1");
+          pos=1;
+      }
     Integer doctype = DocTypeAdapter.getIDFromIndex(pos);
     String  doctype_s = String.format("%03d", doctype);
 
@@ -293,6 +318,8 @@ public class MyCameraActivity extends Activity {
     Log.e(TAG, "Filename = " + filename);
 
     file = new File(directory.getPath() + File.separator + filename + ".jpg");
+    directory = null;
+    filename = null;
     return file;
   }
 
@@ -362,7 +389,11 @@ public class MyCameraActivity extends Activity {
                 public void onClick(View v) {
                     Toast.makeText(myContext, "Accepted", Toast.LENGTH_LONG).show();
                     state="IDLE";
-                    camera.startPreview();
+                    try {
+                        camera.startPreview();
+                    } catch (Exception e){
+                        Log.e (TAG, "Start preview failed - wonder why?");
+                    }
                     acceptButton.setVisibility(View.INVISIBLE);
                     cancelButton.setVisibility(View.INVISIBLE);
                     zoomButton.setVisibility(View.INVISIBLE);
@@ -414,6 +445,7 @@ public class MyCameraActivity extends Activity {
                           File directory = new File(Environment.getExternalStoragePublicDirectory(
                                   Environment.DIRECTORY_PICTURES), getPackageName()+"/holding");
                           File sd = new File(directory.getAbsolutePath());
+                          directory = null;
                           int numfiles =0;
                           File[] sdDirList = sd.listFiles();
                           if (sdDirList != null) {
@@ -421,8 +453,10 @@ public class MyCameraActivity extends Activity {
                           }
                           if (numfiles > 0 ) {
                             String srcFilePath = sdDirList[0].toString();
+                            sdDirList = null;
                             File imgFile = new File(srcFilePath);
                             Bitmap myBitmap = BitmapFactory.decodeFile(imgFile.getAbsolutePath());
+                            imgFile = null;
                             Bitmap newBitmap = Bitmap.createBitmap(myBitmap, 640, 850, 640, 850, null, false);
                             myBitmap = null;
                             ImageView myImage = (ImageView) findViewById(R.id.camera_zoom);
@@ -459,7 +493,7 @@ public class MyCameraActivity extends Activity {
             for (int i = 0; i < ((ViewGroup) view).getChildCount(); i++) {
                 unbindDrawables(((ViewGroup) view).getChildAt(i));
             }
-            ((ViewGroup) view).removeAllViews();
+// apparently not supported            ((ViewGroup) view).removeAllViews();
         }
     }
 
@@ -476,6 +510,8 @@ public class MyCameraActivity extends Activity {
             textData[i] = textReader.readLine();
         }
         textReader.close( );
+        fr = null;
+        textReader = null;
         return textData;
     }
 
@@ -600,50 +636,54 @@ public class MyCameraActivity extends Activity {
     protected String doInBackground(byte[]... data) {
         File picFile = getOutputMediaFile(MEDIA_TYPE_IMAGE);
         if (picFile == null) {
-        Log.e(TAG, "Error creating media file; are storage permissions correct?");
-        return null;
+            Log.e(TAG, "Error creating media file; are storage permissions correct?");
+            return null;
         }
         try {
-        Log.d(TAG,"started SaveImageTask");
-        FileOutputStream fos = new FileOutputStream(picFile);
-         fos.write(data[0]);
-         fos.close();
+            Log.d(TAG,"started SaveImageTask");
+            FileOutputStream fos = new FileOutputStream(picFile);
+            fos.write(data[0]);
+            fos.close();
             data = null;
+            fos=null;
         } catch (FileNotFoundException e) {
          Log.e(TAG, "File not found: " + e.getMessage());
           e.getStackTrace();
         } catch (IOException e) {
-         Log.e(TAG, "I/O error with file: " + e.getMessage());
-         e.getStackTrace();
-        }
-        Log.d(TAG, "File written to store");
-
-        try {
-            Bitmap bm = BitmapFactory.decodeFile(picFile.getAbsolutePath());
-            ExifInterface exif = new ExifInterface(picFile.getAbsolutePath());
-            String orientString = exif.getAttribute(ExifInterface.TAG_ORIENTATION);
-            int orientation = orientString != null ? Integer.parseInt(orientString) : ExifInterface.ORIENTATION_NORMAL;
-            int rotationAngle = 90;
-            if (orientation == ExifInterface.ORIENTATION_ROTATE_90) rotationAngle = 180;
-            if (orientation == ExifInterface.ORIENTATION_ROTATE_180) rotationAngle = 270;
-            if (orientation == ExifInterface.ORIENTATION_ROTATE_270) rotationAngle = 0;
-Log.e(TAG, "Orientation is " + rotationAngle);
-            Matrix matrix = new Matrix();
-            matrix.setRotate(rotationAngle);
-            Bitmap rotatedBitmap = Bitmap.createBitmap(bm, 0, 0, bm.getWidth(), bm.getHeight(), matrix, true);
-
-            FileOutputStream fos = new FileOutputStream(picFile);
-            rotatedBitmap.compress(Bitmap.CompressFormat.JPEG, 90, fos);
-            bm = null;
-            rotatedBitmap = null;
-        }catch (FileNotFoundException e) {
-            Log.e(TAG, "File not found: " + e.getMessage());
-            e.getStackTrace();
-        } catch (IOException e) {
             Log.e(TAG, "I/O error with file: " + e.getMessage());
             e.getStackTrace();
         }
+        Log.d(TAG, "File written to store");
+//
+//   Rotate the file to Portrait...
+//
+        if (1==0) {
+            try {
+                Bitmap bm = BitmapFactory.decodeFile(picFile.getAbsolutePath());
+                ExifInterface exif = new ExifInterface(picFile.getAbsolutePath());
+                String orientString = exif.getAttribute(ExifInterface.TAG_ORIENTATION);
+                int orientation = orientString != null ? Integer.parseInt(orientString) : ExifInterface.ORIENTATION_NORMAL;
+                int rotationAngle = 90;
+                if (orientation == ExifInterface.ORIENTATION_ROTATE_90) rotationAngle = 180;
+                if (orientation == ExifInterface.ORIENTATION_ROTATE_180) rotationAngle = 270;
+                if (orientation == ExifInterface.ORIENTATION_ROTATE_270) rotationAngle = 0;
+                Log.e(TAG, "Orientation is " + rotationAngle);
+                Matrix matrix = new Matrix();
+                matrix.setRotate(rotationAngle);
+                Bitmap rotatedBitmap = Bitmap.createBitmap(bm, 0, 0, bm.getWidth(), bm.getHeight(), matrix, true);
 
+                FileOutputStream fos = new FileOutputStream(picFile);
+                rotatedBitmap.compress(Bitmap.CompressFormat.JPEG, 90, fos);
+                bm = null;
+                rotatedBitmap = null;
+            } catch (FileNotFoundException e) {
+                Log.e(TAG, "File not found: " + e.getMessage());
+                e.getStackTrace();
+            } catch (IOException e) {
+                Log.e(TAG, "I/O error with file: " + e.getMessage());
+                e.getStackTrace();
+            }
+        }
         return null;
      }
   }
@@ -694,8 +734,13 @@ Log.e(TAG, "Orientation is " + rotationAngle);
                     String srcFilePath = sdDirList[i].toString();
                     File src = new File(srcFilePath);
                     src.delete();
+                    src=null;
+                    Log.d(TAG, "Removed " + srcFilePath );
+                    srcFilePath=null;
                 }
             }
+            sdDirList = null;
+            sd = null;
             return null;
         }
     }
