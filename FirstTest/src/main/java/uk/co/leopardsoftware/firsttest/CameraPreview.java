@@ -95,8 +95,11 @@ public class CameraPreview extends SurfaceView
         parameters.setPreviewSize(width, height);
         camera.setDisplayOrientation(180);
     }
+// This doesn't work - but something must - focus is rubbish@
+//    parameters.setFocusMode(Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
+      parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_AUTO);
 
-    camera.setParameters(parameters);
+      camera.setParameters(parameters);
     camera.startPreview();
 
   }

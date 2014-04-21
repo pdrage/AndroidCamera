@@ -17,6 +17,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.hardware.Camera;
 import android.hardware.Camera.PictureCallback;
+import android.hardware.Camera.AutoFocusCallback;
 import android.media.MediaRecorder;
 import android.os.AsyncTask;
 import android.os.Build;
@@ -220,7 +221,7 @@ public class MyCameraActivity extends Activity {
   }
 
   private void getImage() {
-    PictureCallback picture = new PictureCallback() {
+    final PictureCallback picture = new PictureCallback() {
       public void onPictureTaken(byte[] data, Camera cam) {
         Log.d(TAG, "onPictureTaken has been called");
 
@@ -236,8 +237,19 @@ public class MyCameraActivity extends Activity {
         }
     };
 
+      AutoFocusCallback autoFocusCallback = new AutoFocusCallback() {
+          @Override
+          public void onAutoFocus(boolean success, Camera camera) {
+              Log.i("tag","this ran");
+              camera.takePicture(null, null, picture);
+
+          }
+      };
+Log.e(TAG,"Calling Focus");
+      camera.autoFocus(autoFocusCallback);
+
     Log.e(TAG,"Calling TakePicture");
-    camera.takePicture(null, null, picture);
+//    camera.takePicture(null, null, picture);
     Log.e(TAG,"Returned from  TakePicture");
   }
 
