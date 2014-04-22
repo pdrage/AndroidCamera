@@ -4,6 +4,7 @@
     <PreferenceCategory android:title="@string/pref_CWU_settings" >
         <EditTextPreference
             android:title="@string/pref_tablet_id"
+            android:defaultValue="01"
             android:summary="@string/pref_tablet_id_summ"
             android:key="prefTabletId"/>
 
@@ -29,7 +30,8 @@
             android:defaultValue="pDr46@.2012"
             android:key="prefPassword"
             android:summary="@string/pref_password"
-            android:title="@string/pref_password" />
+            android:title="@string/pref_password"
+            android:inputType="textPassword" />
 
 
     </PreferenceCategory>

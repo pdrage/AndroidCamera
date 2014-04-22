@@ -8,7 +8,7 @@
     <string name="action_settings">Settings</string>
 
 
-    <string name="pref_tablet_id">Table Id(2chars)</string>
+    <string name="pref_tablet_id">Tablet Id(2chars)</string>
     <string name="pref_tablet_id_summ">eg 01 or 02</string>
     <string name="pref_server_name">Server Name</string>
     <string name="pref_server_port">Server Port eg 22</string>
