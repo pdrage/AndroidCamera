@@ -4,7 +4,7 @@
     <PreferenceCategory android:title="@string/pref_CWU_settings" >
         <EditTextPreference
             android:title="@string/pref_tablet_id"
-            android:summary="@string/pref_tablet_id"
+            android:summary="@string/pref_tablet_id_summ"
             android:key="prefTabletId"/>
 
         <EditTextPreference
