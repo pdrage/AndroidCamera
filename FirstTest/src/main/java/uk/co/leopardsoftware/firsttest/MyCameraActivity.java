@@ -14,6 +14,7 @@ import android.app.ActionBar;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.hardware.Camera;
 import android.hardware.Camera.PictureCallback;
@@ -23,6 +24,7 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.Surface;
 import android.view.View;
@@ -47,6 +49,7 @@ public class MyCameraActivity extends Activity {
   protected static final int MEDIA_TYPE_IMAGE = 0;
   private static final int CAPTURE_IMAGE_ACTIVITY_REQ = 100;
   private static final String TAG = "MCAct";
+  private static final int RESULT_SETTINGS = 1;
 
   private Camera camera;
   private CameraPreview preview;
@@ -294,6 +297,11 @@ Log.e(TAG,"Calling Focus");
     String seq = "00";
     String CWU_id ="0";
 
+    SharedPreferences sharedPrefs = PreferenceManager
+              .getDefaultSharedPreferences(this);
+
+    tabletId = sharedPrefs.getString("prefTabletId", "01");
+
     EditText mEdit   = (EditText)findViewById(R.id.CWU_id);
     try{
         CWU_id = String.format("%06d", Integer.parseInt(mEdit.getText().toString()));
@@ -370,6 +378,7 @@ Log.e(TAG,"Calling Focus");
     final ImageView cancelButton = (ImageView) findViewById(R.id.cancel);
     final ImageView captureButton = (ImageView) findViewById(R.id.capture);
     final ImageView zoomLayer = (ImageView) findViewById(R.id.camera_zoom);
+    final ImageView settingsButton = (ImageView) findViewById(R.id.settings);
 
     state="IDLE";
     acceptButton.setVisibility(View.INVISIBLE);
@@ -477,6 +486,15 @@ Log.e(TAG,"Calling Focus");
                           }
                       }
 //                      Toast.makeText(myContext, "Click on zoom, state now " + state, Toast.LENGTH_LONG).show();
+                  }
+              }
+      );
+
+      settingsButton.setOnClickListener(
+              new View.OnClickListener() {
+                  public void onClick(View v) {
+                      Intent i = new Intent(myContext, UserSettingActivity.class);
+                      startActivityForResult(i, RESULT_SETTINGS);
                   }
               }
       );
@@ -756,4 +774,5 @@ Log.e(TAG,"Calling Focus");
             return null;
         }
     }
-}
+
+ }

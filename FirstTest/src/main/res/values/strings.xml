@@ -7,4 +7,14 @@
     <string name="title_section3">Section 3</string>
     <string name="action_settings">Settings</string>
 
+
+    <string name="pref_tablet_id">Table Id(2chars)</string>
+    <string name="pref_server_name">Server Name</string>
+    <string name="pref_server_port">Server Port eg 22)</string>
+    <string name="pref_user_name">ssh User Name</string>
+    <string name="pref_password">ssh Password</string>
+
+    <string name="pref_CWU_settings">CWU Settings</string>
+    <string name="menu_settings">CWU Settings 2</string>
+    <string name="settings_name">Settings</string>
 </resources>
