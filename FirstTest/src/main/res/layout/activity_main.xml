@@ -97,6 +97,16 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal|bottom" />
 
+    <EditText
+        style="@style/ProgressStyle"
+        android:layout_height="30dp"
+        android:layout_width="wrap_content"
+        android:text="waiting for update"
+        android:id="@+id/progress"
+        android:layout_marginTop="50dp"
+        android:layout_marginLeft="0dp"
+        />
+
 
 </FrameLayout>
 

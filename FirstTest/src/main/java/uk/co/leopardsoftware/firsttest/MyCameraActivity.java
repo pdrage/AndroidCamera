@@ -32,6 +32,7 @@ import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.FrameLayout;
 import android.widget.Toast;
 import android.graphics.Bitmap;
@@ -166,8 +167,6 @@ public class MyCameraActivity extends Activity {
       if (resultCode == RESULT_OK) {
         if (data == null) {
           // A known bug here! The image should have saved in fileUri
-          Toast.makeText(this, "Image saved successfully", 
-                         Toast.LENGTH_LONG).show();
         } else {
           Toast.makeText(this, "Image saved successfully in: " 
                          + data.getData(), Toast.LENGTH_LONG).show();
@@ -180,13 +179,15 @@ public class MyCameraActivity extends Activity {
   }
 
   protected void onPause() {
-    releaseMediaRecorder();
+//    releaseMediaRecorder();
     releaseCamera();
     super.onPause();
   }
 
   protected void onResume() {
+      Log.e(TAG, "Onresume has been called ");
     if (camera == null) {
+        Log.e(TAG, "OnResume - getting camera instance again");
       camera = getCameraInstance();
       setUpLayout();
     }
@@ -199,7 +200,12 @@ public class MyCameraActivity extends Activity {
     // status bar is hidden, so hide that too if necessary.
     ActionBar actionBar = getActionBar();
     actionBar.hide();
-    super.onResume();
+    Spinner spin = (Spinner) findViewById(R.id.docType_spinner);
+    ArrayList alDocType = new ArrayList();
+    String docTypesPath = Environment.getExternalStoragePublicDirectory(
+            "uk.co.leopardsoftware") + "/DocumentTypes.csv";
+
+      super.onResume();
   }
 
   private boolean checkCameraExists(Context c) {
@@ -214,6 +220,7 @@ public class MyCameraActivity extends Activity {
     Camera c = null;
     try {
       c = Camera.open();
+        Log.e(TAG, "Camera opened in MyCameraActivity - getCameraInstance");
     } catch (Exception e) {
       Log.e(TAG, "No camera: exception " + e.getMessage());
       e.getStackTrace();
@@ -224,6 +231,7 @@ public class MyCameraActivity extends Activity {
   }
 
   private void getImage() {
+    final Context myContext = this;
     final PictureCallback picture = new PictureCallback() {
       public void onPictureTaken(byte[] data, Camera cam) {
         Log.d(TAG, "onPictureTaken has been called");
@@ -244,7 +252,12 @@ public class MyCameraActivity extends Activity {
           @Override
           public void onAutoFocus(boolean success, Camera camera) {
               Log.i("tag","this ran");
-              camera.takePicture(null, null, picture);
+              try {
+                  camera.takePicture(null, null, picture);
+              } catch (Exception $e){
+                  Log.e(TAG, "Takepicture failed -" + $e.getMessage());
+                  Toast.makeText(myContext, "Missed that. Please take again.", Toast.LENGTH_LONG).show();
+              }
 
           }
       };
@@ -347,6 +360,7 @@ Log.e(TAG,"Calling Focus");
     if (camera != null) {
       camera.stopPreview();
       camera.release();
+        Log.e(TAG, "camera released in MyCameraActivity - releaseCamera");
       camera = null;
       preview = null;
     }
@@ -379,6 +393,7 @@ Log.e(TAG,"Calling Focus");
     final ImageView captureButton = (ImageView) findViewById(R.id.capture);
     final ImageView zoomLayer = (ImageView) findViewById(R.id.camera_zoom);
     final ImageView settingsButton = (ImageView) findViewById(R.id.settings);
+    final EditText progressText = (EditText) findViewById(R.id.progress);
 
     state="IDLE";
     acceptButton.setVisibility(View.INVISIBLE);
@@ -386,6 +401,8 @@ Log.e(TAG,"Calling Focus");
     zoomButton.setVisibility(View.INVISIBLE);
     zoomLayer.setVisibility(View.INVISIBLE);
     captureButton.setVisibility(View.VISIBLE);
+
+    progressText.setEnabled(false);
 
 
 
@@ -564,7 +581,7 @@ Log.e(TAG,"Calling Focus");
      *
      */
 
-  private class FTPClass  extends AsyncTask<String, Void, String>{
+  private class FTPClass  extends AsyncTask<String, Integer, String>{
 
       private boolean running = true;
 
@@ -576,7 +593,6 @@ Log.e(TAG,"Calling Focus");
       @Override
       protected String doInBackground(String... urls) {
 
-        Log.e (TAG, "Urls = " + urls);
         while(running) {
       try {
     /* Loop forever */
@@ -597,6 +613,8 @@ Log.e(TAG,"Calling Focus");
                 File[] sdDirList = sd.listFiles();
                 if (sdDirList != null) {
                     Log.d(TAG, "There are " + sdDirList.length + " files in  " + sd.toString());
+                    publishProgress(sdDirList.length);
+
                     numfiles = sdDirList.length;
                 }
                 if (numfiles > 0 ) {
@@ -623,6 +641,7 @@ Log.e(TAG,"Calling Focus");
 
 
                             for(int i=sdDirList.length-1;i>-1;i--){
+                                publishProgress(Integer.valueOf(i));
 
                               String srcFilePath = sdDirList[i].toString();
                               String desFileName = sdDirList[i].toString().substring(sdDirList[i].toString().lastIndexOf("/")+1);
@@ -655,9 +674,24 @@ Log.e(TAG,"Calling Focus");
   }
 
     @Override
-    protected void onPostExecute(String result) {
+    protected void onPostExecute(String result)
+    {
         Log.e(TAG, "onPostExecute run");
     }
+
+      // -- called from the publish progress
+      // -- notice that the datatype of the second param gets passed to this method
+      @Override
+      protected void onProgressUpdate(Integer... values)
+      {
+          super.onProgressUpdate(values);
+          Log.i(TAG, "onProgressUpdate(): " + String.valueOf(values[0]));
+          EditText progress = (EditText)findViewById(R.id.progress);
+          progress.setText(String.valueOf(values[0]) + " files awaiting upload");
+          Toast.makeText(getApplicationContext(), String.valueOf(values[0]) + " files awaiting upload",
+                  Toast.LENGTH_LONG).show();
+
+      }
 }
 
   

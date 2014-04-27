@@ -60,6 +60,8 @@ public class CameraPreview extends SurfaceView
 
   public void surfaceChanged(SurfaceHolder holder, int format, int width, int height)
   {
+
+      Parameters parameters = null;
     if (sh.getSurface() == null) {
       // no preview surface!
       return;
@@ -74,32 +76,41 @@ public class CameraPreview extends SurfaceView
             Log.w(TAG, "Runtime - " + e.getMessage());
         }
     }
-
-    Parameters parameters = camera.getParameters();
+    boolean connected = true;
+    try {
+        parameters = camera.getParameters();
+    } catch (Exception $e) {
+        Log.e(TAG, "Failure in surfaceChanged - camera.getParameters - Camera released? ");
+        connected = false;
+    }
+    if (!connected) {
+        Log.e(TAG, "surfaceChanged: Not connected so return to calling code");
+        return;
+    }
     Display display = ((WindowManager) getContext().getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay();
 
-    if (display.getRotation() == Surface.ROTATION_0) {
-        parameters.setPreviewSize(height, width);
-        camera.setDisplayOrientation(90);
-    }
+    if (parameters== null) {
+        if (display.getRotation() == Surface.ROTATION_0) {
+            parameters.setPreviewSize(height, width);
+            camera.setDisplayOrientation(90);
+        }
 
-    if (display.getRotation() == Surface.ROTATION_90) {
-        parameters.setPreviewSize(width, height);
-    }
+        if (display.getRotation() == Surface.ROTATION_90) {
+            parameters.setPreviewSize(width, height);
+        }
 
-    if (display.getRotation() == Surface.ROTATION_180) {
-        parameters.setPreviewSize(height, width);
-    }
+        if (display.getRotation() == Surface.ROTATION_180) {
+            parameters.setPreviewSize(height, width);
+        }
 
-    if (display.getRotation() == Surface.ROTATION_270) {
-        parameters.setPreviewSize(width, height);
-        camera.setDisplayOrientation(180);
-    }
-// This doesn't work - but something must - focus is rubbish@
-//    parameters.setFocusMode(Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
-      parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_AUTO);
+        if (display.getRotation() == Surface.ROTATION_270) {
+            parameters.setPreviewSize(width, height);
+            camera.setDisplayOrientation(180);
+        }
+        parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_AUTO);
 
-      camera.setParameters(parameters);
+        camera.setParameters(parameters);
+    }
     camera.startPreview();
 
   }

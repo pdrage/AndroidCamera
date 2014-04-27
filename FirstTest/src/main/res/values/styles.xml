@@ -5,4 +5,8 @@
         <!-- Customize your theme here. -->
     </style>
 
+    <style name="ProgressStyle">
+        <item name="android:textColor">@color/bluedark</item>
+        <item name="android:background">@null</item>
+    </style>
 </resources>
