@@ -3,8 +3,8 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/AndroidCamera.iml" filepath="$PROJECT_DIR$/AndroidCamera.iml" />
-      <module fileurl="file://$PROJECT_DIR$/FirstTest/FirstTest.iml" filepath="$PROJECT_DIR$/FirstTest/FirstTest.iml" />
-      <module fileurl="file://$PROJECT_DIR$/FirstTestProject.iml" filepath="$PROJECT_DIR$/FirstTestProject.iml" />
+      <module fileurl="file://$PROJECT_DIR$/CompliWithUs/CompliWithUs.iml" filepath="$PROJECT_DIR$/CompliWithUs/CompliWithUs.iml" />
+      <module fileurl="file://$PROJECT_DIR$/CompliWithUsProject.iml" filepath="$PROJECT_DIR$/CompliWithUsProject.iml" />
     </modules>
   </component>
 </project>
